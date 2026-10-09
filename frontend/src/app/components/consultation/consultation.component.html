@@ -91,11 +91,13 @@
             id="bloodPressure"
             type="text"
             formControlName="bloodPressure"
-            placeholder="e.g. 120/80 mmHg"
+            (blur)="onBpBlur()"
+            placeholder="e.g. 120/80 or 120"
             [class.invalid]="isFieldInvalid('bloodPressure')"
           />
           <div *ngIf="isFieldInvalid('bloodPressure')" class="field-error">
-            Blood pressure is required (e.g. 120/80)
+            <span *ngIf="consultationForm.get('bloodPressure')?.hasError('required')">Blood pressure is required (e.g. 120/80 or 120)</span>
+            <span *ngIf="consultationForm.get('bloodPressure')?.hasError('pattern')">Format should be like 120/80 or 120</span>
           </div>
         </div>
 
@@ -144,7 +146,8 @@
             [class.invalid]="isFieldInvalid('notes')"
           ></textarea>
           <div *ngIf="isFieldInvalid('notes')" class="field-error">
-            Clinical consultation notes are required
+            <span *ngIf="consultationForm.get('notes')?.hasError('required')">Clinical consultation notes are required</span>
+            <span *ngIf="consultationForm.get('notes')?.hasError('minlength')">Clinical notes must be at least 2 characters</span>
           </div>
         </div>
 

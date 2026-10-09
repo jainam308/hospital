@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 @Transactional
 public class ConsultationServiceImpl implements ConsultationService {
 
-    private static final Pattern BP_PATTERN = Pattern.compile("^(\\d{2,3})\\s*/\\s*(\\d{2,3})(?:\\s*mmHg)?$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern BP_PATTERN = Pattern.compile("^(\\d{2,3})(?:\\s*/\\s*(\\d{2,3}))?(?:\\s*mmHg)?$", Pattern.CASE_INSENSITIVE);
 
     private final ConsultationRepository consultationRepository;
     private final AppointmentRepository appointmentRepository;
@@ -59,10 +59,10 @@ public class ConsultationServiceImpl implements ConsultationService {
         String bp = requestDTO.getBloodPressure() != null ? requestDTO.getBloodPressure().trim() : "";
         Matcher bpMatcher = BP_PATTERN.matcher(bp);
         if (!bpMatcher.matches()) {
-            throw new BadRequestException("Invalid blood pressure format: '" + bp + "'. Expected format: '120/80' or '120/80 mmHg'.");
+            throw new BadRequestException("Invalid blood pressure format: '" + bp + "'. Expected format: '120/80', '120', or '120/80 mmHg'.");
         }
         int systolic = Integer.parseInt(bpMatcher.group(1));
-        int diastolic = Integer.parseInt(bpMatcher.group(2));
+        int diastolic = bpMatcher.group(2) != null ? Integer.parseInt(bpMatcher.group(2)) : 80;
         if (systolic < 70 || systolic > 260) {
             throw new BadRequestException("Systolic blood pressure (" + systolic + " mmHg) is outside clinical limits (70 - 260 mmHg).");
         }
@@ -72,6 +72,7 @@ public class ConsultationServiceImpl implements ConsultationService {
         if (systolic <= diastolic) {
             throw new BadRequestException("Systolic pressure (" + systolic + ") must be greater than diastolic pressure (" + diastolic + ").");
         }
+        String formattedBp = systolic + "/" + diastolic + " mmHg";
 
         // 2. Business Logic: Heart Rate Sanity Check
         if (requestDTO.getHeartRate() != null) {

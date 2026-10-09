@@ -60,13 +60,22 @@ export class ConsultationComponent implements OnInit {
   initForm(): void {
     this.consultationForm = this.fb.group({
       appointmentId: [null, [Validators.required]],
-      bloodPressure: ['', [Validators.required, Validators.pattern(/^(\d{2,3})\s*\/\s*(\d{2,3})(?:\s*mmHg)?$/i)]],
+      bloodPressure: ['', [Validators.required, Validators.pattern(/^(\d{2,3})(?:\s*\/\s*(\d{2,3}))?(?:\s*mmHg)?$/i)]],
       heartRate: [null, [Validators.min(35), Validators.max(220)]],
       temperature: [null, [Validators.min(94), Validators.max(108)]],
-      notes: ['', [Validators.required, Validators.minLength(5)]]
+      notes: ['', [Validators.required, Validators.minLength(2)]]
     });
     this.prescriptionItems = [];
     this.selectedPatient = undefined;
+  }
+
+  onBpBlur(): void {
+    const val = this.consultationForm.get('bloodPressure')?.value?.trim();
+    if (val && /^\d{2,3}$/.test(val)) {
+      this.consultationForm.patchValue({
+        bloodPressure: `${val}/80`
+      });
+    }
   }
 
   addPrescriptionRow(): void {
@@ -169,11 +178,15 @@ export class ConsultationComponent implements OnInit {
       return;
     }
 
-    const bp = this.consultationForm.get('bloodPressure')?.value?.trim();
-    const bpMatch = bp ? bp.match(/^(\d{2,3})\s*\/\s*(\d{2,3})(?:\s*mmHg)?$/i) : null;
+    let bp = this.consultationForm.get('bloodPressure')?.value?.trim();
+    if (bp && /^\d{2,3}$/.test(bp)) {
+      bp = `${bp}/80`;
+      this.consultationForm.patchValue({ bloodPressure: bp });
+    }
+    const bpMatch = bp ? bp.match(/^(\d{2,3})(?:\s*\/\s*(\d{2,3}))?(?:\s*mmHg)?$/i) : null;
     if (bpMatch) {
       const sys = parseInt(bpMatch[1], 10);
-      const dia = parseInt(bpMatch[2], 10);
+      const dia = bpMatch[2] ? parseInt(bpMatch[2], 10) : 80;
       if (sys <= dia) {
         this.errorMessage = `Systolic pressure (${sys}) must be greater than diastolic pressure (${dia}).`;
         return;
