@@ -1,0 +1,13 @@
+# Install required dependencies:
+# pip install -r requirements.txt
+#
+# Requirements:
+# - langgraph
+# - langchain
+# - langchain-groq
+# - python-dotenv
+# - pandas
+#
+# Groq API Key:
+# Obtain your free API key from https://console.groq.com/keys
+# Set GROQ_API_KEY in your .env file

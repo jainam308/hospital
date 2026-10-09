@@ -31,3 +31,10 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Python & AI Agent
+__pycache__/
+*.py[cod]
+*$py.class
+*.env
+!.env.example
