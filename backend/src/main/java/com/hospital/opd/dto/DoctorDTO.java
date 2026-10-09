@@ -1,5 +1,6 @@
 package com.hospital.opd.dto;
 
+import com.hospital.opd.entity.DoctorShift;
 import java.math.BigDecimal;
 
 public class DoctorDTO {
@@ -11,6 +12,9 @@ public class DoctorDTO {
     private String specialization;
     private BigDecimal consultationFee;
     private String roomNumber;
+    private DoctorShift shift;
+    private Integer maxDailyQuota;
+    private Integer slotDurationMinutes;
     private String email;
     private String phone;
     private boolean active;
@@ -19,6 +23,12 @@ public class DoctorDTO {
     }
 
     public DoctorDTO(Long id, String name, Long departmentId, String departmentName, String specialization, BigDecimal consultationFee, String roomNumber, String email, String phone, boolean active) {
+        this(id, name, departmentId, departmentName, specialization, consultationFee, roomNumber, DoctorShift.ALL_DAY, 20, 30, email, phone, active);
+    }
+
+    public DoctorDTO(Long id, String name, Long departmentId, String departmentName, String specialization,
+                     BigDecimal consultationFee, String roomNumber, DoctorShift shift, Integer maxDailyQuota,
+                     Integer slotDurationMinutes, String email, String phone, boolean active) {
         this.id = id;
         this.name = name;
         this.departmentId = departmentId;
@@ -26,6 +36,9 @@ public class DoctorDTO {
         this.specialization = specialization;
         this.consultationFee = consultationFee;
         this.roomNumber = roomNumber;
+        this.shift = shift != null ? shift : DoctorShift.ALL_DAY;
+        this.maxDailyQuota = maxDailyQuota != null ? maxDailyQuota : 20;
+        this.slotDurationMinutes = slotDurationMinutes != null ? slotDurationMinutes : 30;
         this.email = email;
         this.phone = phone;
         this.active = active;
@@ -85,6 +98,30 @@ public class DoctorDTO {
 
     public void setRoomNumber(String roomNumber) {
         this.roomNumber = roomNumber;
+    }
+
+    public DoctorShift getShift() {
+        return shift;
+    }
+
+    public void setShift(DoctorShift shift) {
+        this.shift = shift;
+    }
+
+    public Integer getMaxDailyQuota() {
+        return maxDailyQuota;
+    }
+
+    public void setMaxDailyQuota(Integer maxDailyQuota) {
+        this.maxDailyQuota = maxDailyQuota;
+    }
+
+    public Integer getSlotDurationMinutes() {
+        return slotDurationMinutes;
+    }
+
+    public void setSlotDurationMinutes(Integer slotDurationMinutes) {
+        this.slotDurationMinutes = slotDurationMinutes;
     }
 
     public String getEmail() {

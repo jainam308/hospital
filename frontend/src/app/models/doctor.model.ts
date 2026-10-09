@@ -1,3 +1,5 @@
+export type DoctorShift = 'MORNING' | 'EVENING' | 'ALL_DAY';
+
 export interface Department {
   id: number;
   name: string;
@@ -13,6 +15,9 @@ export interface Doctor {
   specialization: string;
   consultationFee: number;
   roomNumber?: string;
+  shift?: DoctorShift;
+  maxDailyQuota?: number;
+  slotDurationMinutes?: number;
   email?: string;
   phone?: string;
   active: boolean;

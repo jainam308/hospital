@@ -89,6 +89,9 @@ public class DoctorServiceImpl implements DoctorService {
                 doctor.getSpecialization(),
                 doctor.getConsultationFee(),
                 doctor.getRoomNumber(),
+                doctor.getShift(),
+                doctor.getMaxDailyQuota(),
+                doctor.getSlotDurationMinutes(),
                 doctor.getEmail(),
                 doctor.getPhone(),
                 doctor.isActive()

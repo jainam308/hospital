@@ -401,3 +401,57 @@ input.invalid, select.invalid {
   color: #be123c;
   font-style: italic;
 }
+
+.doctor-shift-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.shift-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.35rem;
+}
+
+.shift-badge {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+}
+
+.shift-badge.morning {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.shift-badge.evening {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.shift-badge.all_day {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.duration-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #475569;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+}
+
+.quota-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: #64748b;
+}

@@ -6,7 +6,8 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "patients", indexes = {
     @Index(name = "idx_patient_name", columnList = "name"),
-    @Index(name = "idx_patient_phone", columnList = "phone_number")
+    @Index(name = "idx_patient_phone", columnList = "phone_number"),
+    @Index(name = "idx_patient_email", columnList = "email")
 })
 public class Patient {
 
@@ -26,6 +27,9 @@ public class Patient {
 
     @Column(name = "phone_number", nullable = false, length = 20)
     private String phoneNumber;
+
+    @Column(name = "email", length = 100)
+    private String email;
 
     @Column(name = "blood_group", length = 10)
     private String bloodGroup;
@@ -57,6 +61,19 @@ public class Patient {
         this.gender = gender;
         this.age = age;
         this.phoneNumber = phoneNumber;
+        this.bloodGroup = bloodGroup;
+        this.allergies = allergies;
+        this.chronicConditions = chronicConditions;
+    }
+
+    public Patient(Long id, String name, Gender gender, Integer age, String phoneNumber, String email,
+                   String bloodGroup, String allergies, String chronicConditions) {
+        this.id = id;
+        this.name = name;
+        this.gender = gender;
+        this.age = age;
+        this.phoneNumber = phoneNumber;
+        this.email = email;
         this.bloodGroup = bloodGroup;
         this.allergies = allergies;
         this.chronicConditions = chronicConditions;
@@ -107,6 +124,14 @@ public class Patient {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getBloodGroup() {

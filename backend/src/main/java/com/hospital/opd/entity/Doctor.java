@@ -27,6 +27,16 @@ public class Doctor {
     @Column(name = "room_number", length = 20)
     private String roomNumber;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "shift", nullable = false, length = 20)
+    private DoctorShift shift = DoctorShift.ALL_DAY;
+
+    @Column(name = "max_daily_quota", nullable = false)
+    private Integer maxDailyQuota = 20;
+
+    @Column(name = "slot_duration_minutes", nullable = false)
+    private Integer slotDurationMinutes = 30;
+
     @Column(length = 100)
     private String email;
 
@@ -46,6 +56,23 @@ public class Doctor {
         this.specialization = specialization;
         this.consultationFee = consultationFee;
         this.roomNumber = roomNumber;
+        this.shift = DoctorShift.ALL_DAY;
+        this.maxDailyQuota = 20;
+        this.slotDurationMinutes = 30;
+        this.active = true;
+    }
+
+    public Doctor(Long id, String name, Department department, String specialization, BigDecimal consultationFee,
+                  String roomNumber, DoctorShift shift, Integer maxDailyQuota, Integer slotDurationMinutes) {
+        this.id = id;
+        this.name = name;
+        this.department = department;
+        this.specialization = specialization;
+        this.consultationFee = consultationFee;
+        this.roomNumber = roomNumber;
+        this.shift = shift != null ? shift : DoctorShift.ALL_DAY;
+        this.maxDailyQuota = maxDailyQuota != null ? maxDailyQuota : 20;
+        this.slotDurationMinutes = slotDurationMinutes != null ? slotDurationMinutes : 30;
         this.active = true;
     }
 
@@ -95,6 +122,30 @@ public class Doctor {
 
     public void setRoomNumber(String roomNumber) {
         this.roomNumber = roomNumber;
+    }
+
+    public DoctorShift getShift() {
+        return shift;
+    }
+
+    public void setShift(DoctorShift shift) {
+        this.shift = shift;
+    }
+
+    public Integer getMaxDailyQuota() {
+        return maxDailyQuota;
+    }
+
+    public void setMaxDailyQuota(Integer maxDailyQuota) {
+        this.maxDailyQuota = maxDailyQuota;
+    }
+
+    public Integer getSlotDurationMinutes() {
+        return slotDurationMinutes;
+    }
+
+    public void setSlotDurationMinutes(Integer slotDurationMinutes) {
+        this.slotDurationMinutes = slotDurationMinutes;
     }
 
     public String getEmail() {

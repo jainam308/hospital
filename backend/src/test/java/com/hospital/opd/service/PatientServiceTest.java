@@ -3,6 +3,7 @@ package com.hospital.opd.service;
 import com.hospital.opd.dto.PatientDTO;
 import com.hospital.opd.entity.Gender;
 import com.hospital.opd.entity.Patient;
+import com.hospital.opd.exception.BadRequestException;
 import com.hospital.opd.exception.ResourceNotFoundException;
 import com.hospital.opd.repository.PatientRepository;
 import com.hospital.opd.service.impl.PatientServiceImpl;
@@ -45,6 +46,7 @@ class PatientServiceTest {
     void testCreatePatient_Success() {
         PatientDTO inputDto = new PatientDTO(null, "Rohan Sharma", Gender.MALE, 30, "9876543210", null);
 
+        when(patientRepository.findByPhoneNumber("9876543210")).thenReturn(Optional.empty());
         when(patientRepository.save(any(Patient.class))).thenReturn(mockPatient);
 
         PatientDTO result = patientService.createPatient(inputDto);
@@ -56,6 +58,43 @@ class PatientServiceTest {
         assertEquals(30, result.getAge());
         assertEquals("9876543210", result.getPhoneNumber());
         verify(patientRepository, times(1)).save(any(Patient.class));
+    }
+
+    @Test
+    @DisplayName("Should reject patient creation if phone number already exists")
+    void testCreatePatient_DuplicatePhone_ThrowsBadRequest() {
+        PatientDTO inputDto = new PatientDTO(null, "Duplicate Phone User", Gender.MALE, 25, "9876543210", null);
+
+        when(patientRepository.findByPhoneNumber("9876543210")).thenReturn(Optional.of(mockPatient));
+
+        BadRequestException ex = assertThrows(BadRequestException.class, () -> patientService.createPatient(inputDto));
+        assertTrue(ex.getMessage().contains("already registered"));
+        verify(patientRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should reject patient creation if email already exists")
+    void testCreatePatient_DuplicateEmail_ThrowsBadRequest() {
+        PatientDTO inputDto = new PatientDTO(null, "User A", Gender.FEMALE, 29, "9999988888", "rohan@example.com", "A+", "None", "None", null);
+
+        when(patientRepository.findByPhoneNumber("9999988888")).thenReturn(Optional.empty());
+        when(patientRepository.findByEmailIgnoreCase("rohan@example.com")).thenReturn(Optional.of(mockPatient));
+
+        BadRequestException ex = assertThrows(BadRequestException.class, () -> patientService.createPatient(inputDto));
+        assertTrue(ex.getMessage().contains("already registered"));
+        verify(patientRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should reject patient creation if blood group is invalid")
+    void testCreatePatient_InvalidBloodGroup_ThrowsBadRequest() {
+        PatientDTO inputDto = new PatientDTO(null, "User B", Gender.MALE, 35, "9111122222", "XYZ", null, null, null);
+
+        when(patientRepository.findByPhoneNumber("9111122222")).thenReturn(Optional.empty());
+
+        BadRequestException ex = assertThrows(BadRequestException.class, () -> patientService.createPatient(inputDto));
+        assertTrue(ex.getMessage().contains("Invalid blood group"));
+        verify(patientRepository, never()).save(any());
     }
 
     @Test

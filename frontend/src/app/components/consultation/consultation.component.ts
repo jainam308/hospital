@@ -60,9 +60,9 @@ export class ConsultationComponent implements OnInit {
   initForm(): void {
     this.consultationForm = this.fb.group({
       appointmentId: [null, [Validators.required]],
-      bloodPressure: ['', [Validators.required]],
-      heartRate: [null, [Validators.min(30), Validators.max(250)]],
-      temperature: [null, [Validators.min(90), Validators.max(110)]],
+      bloodPressure: ['', [Validators.required, Validators.pattern(/^(\d{2,3})\s*\/\s*(\d{2,3})(?:\s*mmHg)?$/i)]],
+      heartRate: [null, [Validators.min(35), Validators.max(220)]],
+      temperature: [null, [Validators.min(94), Validators.max(108)]],
       notes: ['', [Validators.required, Validators.minLength(5)]]
     });
     this.prescriptionItems = [];
@@ -81,6 +81,23 @@ export class ConsultationComponent implements OnInit {
 
   removePrescriptionRow(index: number): void {
     this.prescriptionItems.splice(index, 1);
+  }
+
+  getAllergyWarningForMedicine(medicineName?: string): string | null {
+    if (!medicineName || !this.selectedPatient?.allergies) return null;
+    const allergies = this.selectedPatient.allergies
+      .toLowerCase()
+      .split(',')
+      .map(a => a.trim())
+      .filter(a => a.length > 2 && a !== 'none');
+
+    const medLower = medicineName.toLowerCase().trim();
+    for (const allergy of allergies) {
+      if (medLower.includes(allergy) || (allergy.includes('penicillin') && medLower.includes('amox'))) {
+        return `⚠️ Allergy Conflict: Patient has recorded allergy to "${allergy}"`;
+      }
+    }
+    return null;
   }
 
   loadPatients(): void {
@@ -150,6 +167,17 @@ export class ConsultationComponent implements OnInit {
     if (this.consultationForm.invalid) {
       this.consultationForm.markAllAsTouched();
       return;
+    }
+
+    const bp = this.consultationForm.get('bloodPressure')?.value?.trim();
+    const bpMatch = bp ? bp.match(/^(\d{2,3})\s*\/\s*(\d{2,3})(?:\s*mmHg)?$/i) : null;
+    if (bpMatch) {
+      const sys = parseInt(bpMatch[1], 10);
+      const dia = parseInt(bpMatch[2], 10);
+      if (sys <= dia) {
+        this.errorMessage = `Systolic pressure (${sys}) must be greater than diastolic pressure (${dia}).`;
+        return;
+      }
     }
 
     this.isSubmitting = true;

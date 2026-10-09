@@ -6,6 +6,7 @@ import com.hospital.opd.dto.PatientDTO;
 import com.hospital.opd.dto.PrescriptionItemDTO;
 import com.hospital.opd.entity.Department;
 import com.hospital.opd.entity.Doctor;
+import com.hospital.opd.entity.DoctorShift;
 import com.hospital.opd.entity.Gender;
 import com.hospital.opd.repository.DepartmentRepository;
 import com.hospital.opd.repository.DoctorRepository;
@@ -58,10 +59,10 @@ public class DataInitializer implements CommandLineRunner {
             Department orthopedics = departmentRepository.save(new Department(null, "Orthopedics", "ORTHO", "Bone, joint, and musculoskeletal disorders"));
             Department pediatrics = departmentRepository.save(new Department(null, "Pediatrics", "PEDIATRIC", "Infant, child, and adolescent healthcare"));
 
-            doctorRepository.save(new Doctor(null, "Dr. Rajesh Gupta", generalMed, "Senior Consultant Physician", BigDecimal.valueOf(500.00), "Room 101"));
-            doctorRepository.save(new Doctor(null, "Dr. Anjali Menon", cardiology, "Interventional Cardiologist", BigDecimal.valueOf(800.00), "Room 204"));
-            doctorRepository.save(new Doctor(null, "Dr. Vikram Sethi", orthopedics, "Orthopedic Surgeon", BigDecimal.valueOf(700.00), "Room 305"));
-            doctorRepository.save(new Doctor(null, "Dr. Sneha Kulkarni", pediatrics, "Pediatric Specialist", BigDecimal.valueOf(600.00), "Room 108"));
+            doctorRepository.save(new Doctor(null, "Dr. Rajesh Gupta", generalMed, "Senior Consultant Physician", BigDecimal.valueOf(500.00), "Room 101", DoctorShift.MORNING, 20, 30));
+            doctorRepository.save(new Doctor(null, "Dr. Anjali Menon", cardiology, "Interventional Cardiologist", BigDecimal.valueOf(800.00), "Room 204", DoctorShift.ALL_DAY, 20, 30));
+            doctorRepository.save(new Doctor(null, "Dr. Vikram Sethi", orthopedics, "Orthopedic Surgeon", BigDecimal.valueOf(700.00), "Room 305", DoctorShift.EVENING, 20, 30));
+            doctorRepository.save(new Doctor(null, "Dr. Sneha Kulkarni", pediatrics, "Pediatric Specialist", BigDecimal.valueOf(600.00), "Room 108", DoctorShift.ALL_DAY, 20, 30));
         }
 
         if (patientRepository.count() > 0) {
@@ -71,35 +72,35 @@ public class DataInitializer implements CommandLineRunner {
 
         log.info("Seeding initial demo data for OPD Mini-Module (v2.0)...");
 
-        // 1. Seed Patients with Medical Profiles
+        // 1. Seed Patients with Medical Profiles and unique emails/phones
         PatientDTO p1 = patientService.createPatient(new PatientDTO(null, "Rahul Verma", Gender.MALE, 34, "9876543210",
-                "B+", "Penicillin, Amoxicillin", "Asthma", null));
+                "rahul.verma@example.com", "B+", "Penicillin, Amoxicillin", "Asthma", null));
         PatientDTO p2 = patientService.createPatient(new PatientDTO(null, "Priya Sharma", Gender.FEMALE, 28, "9823456789",
-                "O+", "None", "None", null));
+                "priya.sharma@example.com", "O+", "None", "None", null));
         PatientDTO p3 = patientService.createPatient(new PatientDTO(null, "Amit Patel", Gender.MALE, 52, "9123456780",
-                "A+", "Sulfa drugs", "Type 2 Diabetes, Hypertension", null));
+                "amit.patel@example.com", "A+", "Sulfa drugs", "Type 2 Diabetes, Hypertension", null));
         PatientDTO p4 = patientService.createPatient(new PatientDTO(null, "Sunita Rao", Gender.FEMALE, 45, "9988776655",
-                "AB+", "Aspirin, Ibuprofen", "Hypothyroidism", null));
+                "sunita.rao@example.com", "AB+", "Aspirin, Ibuprofen", "Hypothyroidism", null));
 
-        // 2. Seed Appointments for Today
-        LocalDateTime now = LocalDateTime.now();
+        // 2. Seed Appointments (Within operating hours, spaced >= 30 mins, aligned with doctor shifts)
+        LocalDateTime tomorrow = LocalDateTime.now().plusDays(1);
 
         var appt1 = appointmentService.bookAppointment(new AppointmentRequestDTO(
                 p1.getId(),
                 "Dr. Rajesh Gupta (General Medicine)",
-                now.withHour(10).withMinute(0).withSecond(0)
+                tomorrow.withHour(10).withMinute(0).withSecond(0)
         ));
 
         var appt2 = appointmentService.bookAppointment(new AppointmentRequestDTO(
                 p2.getId(),
                 "Dr. Anjali Menon (Cardiology)",
-                now.withHour(11).withMinute(30).withSecond(0)
+                tomorrow.withHour(11).withMinute(30).withSecond(0)
         ));
 
         var appt3 = appointmentService.bookAppointment(new AppointmentRequestDTO(
                 p3.getId(),
                 "Dr. Vikram Sethi (Orthopedics)",
-                now.withHour(14).withMinute(0).withSecond(0)
+                tomorrow.withHour(14).withMinute(30).withSecond(0)
         ));
 
         // 3. Seed an already completed consultation with E-Prescription for p1

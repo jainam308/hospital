@@ -643,3 +643,19 @@ input.invalid, select.invalid, textarea.invalid {
 .btn-billing-link:hover {
   background: #1d4ed8;
 }
+
+.rx-allergy-danger {
+  border-color: #ef4444 !important;
+  background: #fff1f2 !important;
+}
+
+.rx-allergy-badge {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #f87171;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}

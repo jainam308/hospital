@@ -64,6 +64,21 @@
           <div *ngIf="isFieldInvalid('doctorName')" class="field-error">
             Please select attending doctor
           </div>
+
+          <!-- Doctor Batch / Shift Info Card -->
+          <div *ngIf="selectedDoctor" class="doctor-shift-card">
+            <div class="shift-row">
+              <span class="shift-badge" [ngClass]="selectedDoctor.shift ? selectedDoctor.shift.toLowerCase() : 'all_day'">
+                {{ selectedDoctor.shift === 'MORNING' ? '🌅 Morning Batch (09:00 - 13:00)' :
+                   selectedDoctor.shift === 'EVENING' ? '🌇 Evening Batch (14:00 - 18:00)' : '☀️ Full Day Batch (09:00 - 18:00)' }}
+              </span>
+              <span class="duration-badge">⏱️ {{ selectedDoctor.slotDurationMinutes || 30 }} mins slot</span>
+            </div>
+            <div class="quota-info">
+              <span>Fee: <strong>₹{{ selectedDoctor.consultationFee }}</strong> | Room: <strong>{{ selectedDoctor.roomNumber || 'OPD' }}</strong></span>
+              <span>Daily Max: {{ selectedDoctor.maxDailyQuota || 20 }} patients</span>
+            </div>
+          </div>
         </div>
 
         <div class="form-group">
@@ -71,21 +86,23 @@
           <input
             id="appointmentDateTime"
             type="datetime-local"
+            [min]="minDateTime"
             formControlName="appointmentDateTime"
             [class.invalid]="isFieldInvalid('appointmentDateTime')"
           />
+          <small class="field-hint">OPD Hours: 09:00 - 18:00 (Lunch: 13:00 - 14:00). Past dates are disabled.</small>
           <div *ngIf="isFieldInvalid('appointmentDateTime')" class="field-error">
             Appointment date & time is required
           </div>
         </div>
 
-        <!-- Real-time Slot Conflict Warning Box -->
+        <!-- Real-time Slot Conflict / Validation Warning Box -->
         <div *ngIf="hasSlotConflict" class="conflict-alert">
           <div class="conflict-icon">⚠️</div>
           <div class="conflict-text">
-            <strong>Slot Conflict Detected!</strong>
+            <strong>Scheduling Rule Violation / Conflict</strong>
             <p>{{ conflictWarningMessage }}</p>
-            <span class="conflict-hint">Select a time at least 30 minutes apart or choose an alternate doctor.</span>
+            <span class="conflict-hint">Please choose an available slot in the doctor's batch spaced at least 30 minutes from other appointments.</span>
           </div>
         </div>
 

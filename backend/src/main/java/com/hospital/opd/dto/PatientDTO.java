@@ -17,12 +17,15 @@ public class PatientDTO {
 
     @NotNull(message = "Age is required")
     @Min(value = 0, message = "Age cannot be negative")
-    @Max(value = 150, message = "Age cannot exceed 150")
+    @Max(value = 130, message = "Age cannot exceed 130")
     private Integer age;
 
     @NotBlank(message = "Phone number is required")
     @Pattern(regexp = "^[0-9+\\-\\s()]{7,20}$", message = "Phone number format is invalid")
     private String phoneNumber;
+
+    @Email(message = "Invalid email format (e.g. user@example.com)")
+    private String email;
 
     private String bloodGroup;
     private String allergies;
@@ -49,6 +52,20 @@ public class PatientDTO {
         this.gender = gender;
         this.age = age;
         this.phoneNumber = phoneNumber;
+        this.bloodGroup = bloodGroup;
+        this.allergies = allergies;
+        this.chronicConditions = chronicConditions;
+        this.createdAt = createdAt;
+    }
+
+    public PatientDTO(Long id, String name, Gender gender, Integer age, String phoneNumber, String email,
+                      String bloodGroup, String allergies, String chronicConditions, LocalDateTime createdAt) {
+        this.id = id;
+        this.name = name;
+        this.gender = gender;
+        this.age = age;
+        this.phoneNumber = phoneNumber;
+        this.email = email;
         this.bloodGroup = bloodGroup;
         this.allergies = allergies;
         this.chronicConditions = chronicConditions;
@@ -93,6 +110,14 @@ public class PatientDTO {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getBloodGroup() {

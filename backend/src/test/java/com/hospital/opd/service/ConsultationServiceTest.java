@@ -8,6 +8,7 @@ import com.hospital.opd.exception.ResourceNotFoundException;
 import com.hospital.opd.repository.AppointmentRepository;
 import com.hospital.opd.repository.ConsultationRepository;
 import com.hospital.opd.repository.PatientRepository;
+import com.hospital.opd.service.BillingService;
 import com.hospital.opd.service.impl.ConsultationServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -36,6 +37,9 @@ class ConsultationServiceTest {
 
     @Mock
     private PatientRepository patientRepository;
+
+    @Mock
+    private BillingService billingService;
 
     @InjectMocks
     private ConsultationServiceImpl consultationService;
@@ -73,6 +77,39 @@ class ConsultationServiceTest {
 
         verify(appointmentRepository, times(1)).save(mockAppointment);
         verify(consultationRepository, times(1)).save(any(Consultation.class));
+    }
+
+    @Test
+    @DisplayName("Should reject consultation when blood pressure format is invalid")
+    void testCreateConsultation_InvalidBPFormat_ThrowsBadRequest() {
+        ConsultationRequestDTO request = new ConsultationRequestDTO(10L, "invalid-bp", 72, 98.6, "Notes");
+
+        when(appointmentRepository.findById(10L)).thenReturn(Optional.of(mockAppointment));
+
+        BadRequestException ex = assertThrows(BadRequestException.class, () -> consultationService.createConsultation(request));
+        assertTrue(ex.getMessage().contains("Invalid blood pressure format"));
+    }
+
+    @Test
+    @DisplayName("Should reject consultation when systolic BP is less than or equal to diastolic")
+    void testCreateConsultation_SystolicLessThanDiastolic_ThrowsBadRequest() {
+        ConsultationRequestDTO request = new ConsultationRequestDTO(10L, "80/120", 72, 98.6, "Notes");
+
+        when(appointmentRepository.findById(10L)).thenReturn(Optional.of(mockAppointment));
+
+        BadRequestException ex = assertThrows(BadRequestException.class, () -> consultationService.createConsultation(request));
+        assertTrue(ex.getMessage().contains("must be greater than diastolic"));
+    }
+
+    @Test
+    @DisplayName("Should reject consultation when heart rate is outside physiological range")
+    void testCreateConsultation_AbnormalHeartRate_ThrowsBadRequest() {
+        ConsultationRequestDTO request = new ConsultationRequestDTO(10L, "120/80", 300, 98.6, "Notes");
+
+        when(appointmentRepository.findById(10L)).thenReturn(Optional.of(mockAppointment));
+
+        BadRequestException ex = assertThrows(BadRequestException.class, () -> consultationService.createConsultation(request));
+        assertTrue(ex.getMessage().contains("Heart rate"));
     }
 
     @Test

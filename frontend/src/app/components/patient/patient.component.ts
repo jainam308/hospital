@@ -35,8 +35,9 @@ export class PatientComponent implements OnInit {
     this.patientForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
       gender: ['MALE', [Validators.required]],
-      age: [null, [Validators.required, Validators.min(0), Validators.max(150)]],
+      age: [null, [Validators.required, Validators.min(0), Validators.max(130)]],
       phoneNumber: ['', [Validators.required, Validators.pattern(/^[0-9+\-\s()]{7,20}$/)]],
+      email: ['', [Validators.email]],
       bloodGroup: [''],
       allergies: [''],
       chronicConditions: ['']
@@ -97,6 +98,7 @@ export class PatientComponent implements OnInit {
       gender: 'MALE',
       age: null,
       phoneNumber: '',
+      email: '',
       bloodGroup: '',
       allergies: '',
       chronicConditions: ''

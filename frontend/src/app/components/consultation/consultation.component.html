@@ -160,11 +160,17 @@
           <span>No medicines added yet. Click <strong>+ Add Medicine</strong> to generate a digital prescription.</span>
         </div>
 
-        <div *ngFor="let item of prescriptionItems; let i = index" class="rx-item-card">
+        <div *ngFor="let item of prescriptionItems; let i = index" class="rx-item-card" [class.rx-allergy-danger]="getAllergyWarningForMedicine(item.medicineName)">
           <div class="rx-card-top">
             <span class="rx-row-num">#{{ i + 1 }}</span>
             <button type="button" class="btn-remove-rx" (click)="removePrescriptionRow(i)" title="Remove medicine">✕</button>
           </div>
+
+          <!-- Per-medicine allergy conflict warning -->
+          <div *ngIf="getAllergyWarningForMedicine(item.medicineName)" class="rx-allergy-badge">
+            🚨 {{ getAllergyWarningForMedicine(item.medicineName) }} — Double check before prescribing!
+          </div>
+
           <div class="form-row">
             <div class="form-group half">
               <label>Medicine Name <span class="required">*</span></label>

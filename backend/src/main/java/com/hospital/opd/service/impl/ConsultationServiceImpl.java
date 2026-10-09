@@ -17,11 +17,15 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
 @Transactional
 public class ConsultationServiceImpl implements ConsultationService {
+
+    private static final Pattern BP_PATTERN = Pattern.compile("^(\\d{2,3})\\s*/\\s*(\\d{2,3})(?:\\s*mmHg)?$", Pattern.CASE_INSENSITIVE);
 
     private final ConsultationRepository consultationRepository;
     private final AppointmentRepository appointmentRepository;
@@ -43,14 +47,52 @@ public class ConsultationServiceImpl implements ConsultationService {
         Appointment appointment = appointmentRepository.findById(requestDTO.getAppointmentId())
                 .orElseThrow(() -> new ResourceNotFoundException("Appointment not found with ID: " + requestDTO.getAppointmentId()));
 
+        if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
+            throw new BadRequestException("Cannot conduct a consultation for a CANCELLED appointment.");
+        }
+
         if (consultationRepository.existsByAppointmentId(requestDTO.getAppointmentId())) {
             throw new BadRequestException("Consultation has already been recorded for this appointment");
+        }
+
+        // 1. Business Logic: Blood Pressure Clinical Sanity Validation
+        String bp = requestDTO.getBloodPressure() != null ? requestDTO.getBloodPressure().trim() : "";
+        Matcher bpMatcher = BP_PATTERN.matcher(bp);
+        if (!bpMatcher.matches()) {
+            throw new BadRequestException("Invalid blood pressure format: '" + bp + "'. Expected format: '120/80' or '120/80 mmHg'.");
+        }
+        int systolic = Integer.parseInt(bpMatcher.group(1));
+        int diastolic = Integer.parseInt(bpMatcher.group(2));
+        if (systolic < 70 || systolic > 260) {
+            throw new BadRequestException("Systolic blood pressure (" + systolic + " mmHg) is outside clinical limits (70 - 260 mmHg).");
+        }
+        if (diastolic < 40 || diastolic > 160) {
+            throw new BadRequestException("Diastolic blood pressure (" + diastolic + " mmHg) is outside clinical limits (40 - 160 mmHg).");
+        }
+        if (systolic <= diastolic) {
+            throw new BadRequestException("Systolic pressure (" + systolic + ") must be greater than diastolic pressure (" + diastolic + ").");
+        }
+
+        // 2. Business Logic: Heart Rate Sanity Check
+        if (requestDTO.getHeartRate() != null) {
+            int hr = requestDTO.getHeartRate();
+            if (hr < 35 || hr > 220) {
+                throw new BadRequestException("Heart rate (" + hr + " bpm) is outside plausible clinical range (35 - 220 bpm).");
+            }
+        }
+
+        // 3. Business Logic: Temperature Sanity Check
+        if (requestDTO.getTemperature() != null) {
+            double temp = requestDTO.getTemperature();
+            if (temp < 94.0 || temp > 108.0) {
+                throw new BadRequestException("Body temperature (" + temp + " °F) is outside plausible clinical range (94.0°F - 108.0°F).");
+            }
         }
 
         Consultation consultation = new Consultation();
         consultation.setAppointment(appointment);
         consultation.setPatient(appointment.getPatient());
-        consultation.setBloodPressure(requestDTO.getBloodPressure().trim());
+        consultation.setBloodPressure(systolic + "/" + diastolic + " mmHg");
         consultation.setHeartRate(requestDTO.getHeartRate());
         consultation.setTemperature(requestDTO.getTemperature());
         consultation.setNotes(requestDTO.getNotes().trim());

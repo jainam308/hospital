@@ -21,6 +21,9 @@ export class AppointmentComponent implements OnInit {
   doctorsList: Doctor[] = [];
   departmentsList: Department[] = [];
 
+  selectedDoctor?: Doctor;
+  minDateTime: string = '';
+
   bookingForm!: FormGroup;
   viewMode: 'today' | 'all' = 'today';
   isLoading: boolean = false;
@@ -40,6 +43,7 @@ export class AppointmentComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.updateMinDateTime();
     this.initForm();
     this.loadPatients();
     this.loadDoctors();
@@ -59,9 +63,22 @@ export class AppointmentComponent implements OnInit {
     });
   }
 
-  initForm(): void {
+  updateMinDateTime(): void {
     const now = new Date();
+    // Offset for local ISO string
+    this.minDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  }
+
+  initForm(): void {
+    this.updateMinDateTime();
+    const now = new Date();
+    // Default to tomorrow 10:00 AM or next hour
     now.setHours(now.getHours() + 1, 0, 0, 0);
+    if (now.getHours() < 9) now.setHours(9, 0, 0, 0);
+    if (now.getHours() >= 18) {
+      now.setDate(now.getDate() + 1);
+      now.setHours(10, 0, 0, 0);
+    }
     const localIso = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 
     this.bookingForm = this.fb.group({
@@ -71,6 +88,7 @@ export class AppointmentComponent implements OnInit {
     });
     this.hasSlotConflict = false;
     this.conflictWarningMessage = '';
+    this.selectedDoctor = undefined;
   }
 
   loadPatients(): void {
@@ -95,20 +113,66 @@ export class AppointmentComponent implements OnInit {
   }
 
   checkConflict(): void {
-    const doctor = this.bookingForm.get('doctorName')?.value;
-    const time = this.bookingForm.get('appointmentDateTime')?.value;
+    const doctorString = this.bookingForm.get('doctorName')?.value;
+    const timeString = this.bookingForm.get('appointmentDateTime')?.value;
 
-    if (!doctor || !time) {
+    if (!doctorString || !timeString) {
       this.hasSlotConflict = false;
       this.conflictWarningMessage = '';
+      this.selectedDoctor = undefined;
       return;
     }
 
-    this.doctorService.checkSlotConflict(doctor, time).subscribe({
+    // Match selected doctor object
+    this.selectedDoctor = this.doctorsList.find(d =>
+      doctorString.includes(d.name)
+    );
+
+    const chosenDate = new Date(timeString);
+    const now = new Date();
+
+    // 1. Business Logic: Past date check
+    if (chosenDate.getTime() < now.getTime() - 60000) {
+      this.hasSlotConflict = true;
+      this.conflictWarningMessage = '⚠️ Selected appointment time cannot be in the past.';
+      return;
+    }
+
+    const hour = chosenDate.getHours();
+    const minute = chosenDate.getMinutes();
+
+    // 2. Business Logic: Operating hours check
+    if (hour < 9 || (hour === 18 && minute > 0) || hour > 18) {
+      this.hasSlotConflict = true;
+      this.conflictWarningMessage = `⚠️ OPD Operating Hours are 09:00 to 18:00. Time ${chosenDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} is outside clinic hours.`;
+      return;
+    }
+
+    // 3. Business Logic: Lunch break check
+    if (hour === 13) {
+      this.hasSlotConflict = true;
+      this.conflictWarningMessage = '⚠️ Doctor Lunch Break (13:00 - 14:00). Please select Morning Batch (09:00 - 13:00) or Evening Batch (14:00 - 18:00).';
+      return;
+    }
+
+    // 4. Business Logic: Doctor shift check
+    if (this.selectedDoctor?.shift === 'MORNING' && hour >= 14) {
+      this.hasSlotConflict = true;
+      this.conflictWarningMessage = `⚠️ ${this.selectedDoctor.name} is only available in the Morning Batch (09:00 - 13:00).`;
+      return;
+    }
+    if (this.selectedDoctor?.shift === 'EVENING' && hour < 13) {
+      this.hasSlotConflict = true;
+      this.conflictWarningMessage = `⚠️ ${this.selectedDoctor.name} is only available in the Evening Batch (14:00 - 18:00).`;
+      return;
+    }
+
+    // 5. Server-side 30-minute slot conflict check
+    this.doctorService.checkSlotConflict(doctorString, timeString).subscribe({
       next: (res) => {
         this.hasSlotConflict = res.conflict;
         if (res.conflict) {
-          this.conflictWarningMessage = `⚠️ Doctor "${doctor}" already has a scheduled appointment within 30 minutes of this time.`;
+          this.conflictWarningMessage = `⚠️ Doctor already has a scheduled 30-minute appointment slot near this time. Please pick another slot.`;
         } else {
           this.conflictWarningMessage = '';
         }
@@ -167,7 +231,7 @@ export class AppointmentComponent implements OnInit {
     }
 
     if (this.hasSlotConflict) {
-      this.errorMessage = 'Cannot schedule appointment due to a slot conflict with the chosen doctor.';
+      this.errorMessage = this.conflictWarningMessage || 'Cannot schedule appointment due to validation rules or slot conflict.';
       return;
     }
 

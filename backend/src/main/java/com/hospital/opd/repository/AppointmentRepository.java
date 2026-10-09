@@ -25,4 +25,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
     List<Appointment> findByDoctorNameIgnoreCaseAndAppointmentDateTimeBetweenAndStatusNot(
             String doctorName, LocalDateTime start, LocalDateTime end, AppointmentStatus status);
+
+    long countByDoctorNameIgnoreCaseAndAppointmentDateTimeBetweenAndStatusNot(
+            String doctorName, LocalDateTime start, LocalDateTime end, AppointmentStatus status);
 }
