@@ -57,7 +57,7 @@ From `backend/` directory:
 ```bash
 .\mvnw.cmd spring-boot:run
 ```
-Backend will be available on `http://localhost:8080`.
+Backend will be available on `http://localhost:8081`.
 
 ### 3. Frontend (Angular)
 From `frontend/` directory:

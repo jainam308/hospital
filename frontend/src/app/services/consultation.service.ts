@@ -7,7 +7,7 @@ import { ConsultationRequest, ConsultationResponse } from '../models/consultatio
   providedIn: 'root'
 })
 export class ConsultationService {
-  private apiUrl = 'http://localhost:8080/api/consultations';
+  private apiUrl = 'http://localhost:8081/api/consultations';
 
   constructor(private http: HttpClient) {}
 
