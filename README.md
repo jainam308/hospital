@@ -313,6 +313,39 @@ workflow.add_edge("appointment_executor", END)
 app = workflow.compile()
 ```
 
+### 📁 `hospitalagent/` Repository Structure & How to Run
+
+The runnable LangGraph AI agent is located directly inside the [`hospitalagent/`](hospitalagent/) directory:
+
+```
+hospitalagent/
+├── main.py            # LangGraph workflow compilation & execution entrypoint
+├── state.py           # PatientState TypedDict schema
+├── intake.py          # Interactive CLI patient intake interface
+├── router.py          # LLaMA-3.3-70B Groq LLM with emergency & crisis guardrails
+├── wards.py           # Ward nodes: General, Emergency, and Mental Health
+├── doctor.py          # Doctor availability matcher & dynamic slot calculator
+├── doctors.csv        # Active roster with ward mapping & dynamic next slots
+├── requirements.txt   # Python dependencies (langgraph, langchain-groq, pandas)
+└── .env.example       # Template for GROQ_API_KEY
+```
+
+#### Running the AI Agent:
+```bash
+# 1. Navigate to the agent directory
+cd hospitalagent
+
+# 2. Install dependencies
+pip install -r requirements.txt
+
+# 3. Configure your Groq API key in .env
+copy .env.example .env
+# Edit .env with your GROQ_API_KEY
+
+# 4. Run the autonomous agent
+python main.py
+```
+
 ---
 
 ## 💳 Razorpay Payment Gateway Workflow & Invariants
