@@ -1,0 +1,177 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Appointment Scheduling</h1>
+      <p class="page-subtitle">Schedule OPD consultations and manage daily queue</p>
+    </div>
+    <div class="header-stats">
+      <div class="stat-card">
+        <span class="stat-num">{{ todayCount }}</span>
+        <span class="stat-lbl">Today's Appointments</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="successMessage" class="alert alert-success">
+    <span>✅ {{ successMessage }}</span>
+    <button class="close-btn" (click)="successMessage = ''">&times;</button>
+  </div>
+  <div *ngIf="errorMessage" class="alert alert-danger">
+    <span>⚠️ {{ errorMessage }}</span>
+    <button class="close-btn" (click)="errorMessage = ''">&times;</button>
+  </div>
+
+  <div class="grid-layout">
+    <!-- Booking Form Card -->
+    <div class="card form-card">
+      <div class="card-header">
+        <h2 class="card-title">📅 Book Appointment</h2>
+      </div>
+      <form [formGroup]="bookingForm" (ngSubmit)="onSubmit()" class="form-body">
+        <div class="form-group">
+          <label for="patientId">Select Patient <span class="required">*</span></label>
+          <select
+            id="patientId"
+            formControlName="patientId"
+            [class.invalid]="isFieldInvalid('patientId')"
+          >
+            <option [ngValue]="null" disabled>-- Choose a Registered Patient --</option>
+            <option *ngFor="let p of patientList" [value]="p.id">
+              #{{ p.id }} - {{ p.name }} (📞 {{ p.phoneNumber }})
+            </option>
+          </select>
+          <div *ngIf="isFieldInvalid('patientId')" class="field-error">
+            Please select a patient
+          </div>
+          <div class="field-hint" *ngIf="patientList.length === 0">
+            No patients available. <a routerLink="/patients">Register a patient first</a>.
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="doctorName">Attending Doctor <span class="required">*</span></label>
+          <select
+            id="doctorName"
+            formControlName="doctorName"
+            [class.invalid]="isFieldInvalid('doctorName')"
+          >
+            <option value="" disabled>-- Select Doctor / Department --</option>
+            <option value="Dr. Rajesh Gupta (General Medicine)">Dr. Rajesh Gupta (General Medicine)</option>
+            <option value="Dr. Anjali Menon (Cardiology)">Dr. Anjali Menon (Cardiology)</option>
+            <option value="Dr. Vikram Seth (Orthopedics)">Dr. Vikram Seth (Orthopedics)</option>
+            <option value="Dr. Meera Nambiar (Pediatrics)">Dr. Meera Nambiar (Pediatrics)</option>
+            <option value="Dr. Sneha Roy (Dermatology)">Dr. Sneha Roy (Dermatology)</option>
+          </select>
+          <div *ngIf="isFieldInvalid('doctorName')" class="field-error">
+            Please select attending doctor
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="appointmentDateTime">Appointment Date & Time <span class="required">*</span></label>
+          <input
+            id="appointmentDateTime"
+            type="datetime-local"
+            formControlName="appointmentDateTime"
+            [class.invalid]="isFieldInvalid('appointmentDateTime')"
+          />
+          <div *ngIf="isFieldInvalid('appointmentDateTime')" class="field-error">
+            Appointment date & time is required
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" [disabled]="bookingForm.invalid || isSubmitting">
+            <span *ngIf="isSubmitting">Scheduling...</span>
+            <span *ngIf="!isSubmitting">📅 Confirm Appointment</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Appointments Queue Card -->
+    <div class="card list-card">
+      <div class="card-header queue-header">
+        <h2 class="card-title">📋 Appointments Queue</h2>
+        <div class="filter-tabs">
+          <button
+            class="tab-btn"
+            [class.active]="viewMode === 'today'"
+            (click)="setViewMode('today')"
+          >
+            Today's Queue ({{ todayCount }})
+          </button>
+          <button
+            class="tab-btn"
+            [class.active]="viewMode === 'all'"
+            (click)="setViewMode('all')"
+          >
+            All Appointments ({{ appointments.length }})
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <div *ngIf="isLoading" class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading appointments queue...</p>
+        </div>
+
+        <div *ngIf="!isLoading && displayedAppointments.length === 0" class="empty-state">
+          <div class="empty-icon">🗓️</div>
+          <p>No appointments found for {{ viewMode === 'today' ? 'today' : 'the selected filter' }}.</p>
+          <span class="empty-sub">Book an appointment using the form on the left.</span>
+        </div>
+
+        <table *ngIf="!isLoading && displayedAppointments.length > 0" class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Patient</th>
+              <th>Doctor</th>
+              <th>Date & Time</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let a of displayedAppointments">
+              <td class="bold">#{{ a.id }}</td>
+              <td>
+                <div class="patient-info">
+                  <strong>{{ a.patientName }}</strong>
+                  <span class="phone-sub">📞 {{ a.patientPhone }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="doctor-badge">👨‍⚕️ {{ a.doctorName }}</span>
+              </td>
+              <td class="date-cell">
+                {{ a.appointmentDateTime | date:'medium' }}
+              </td>
+              <td>
+                <span class="badge" [ngClass]="a.status.toLowerCase()">
+                  {{ a.status }}
+                </span>
+              </td>
+              <td class="actions-cell">
+                <button
+                  *ngIf="a.status === 'SCHEDULED'"
+                  class="btn-action btn-consult"
+                  (click)="startConsultation(a)"
+                  title="Start Consultation"
+                >
+                  🩺 Start Consultation
+                </button>
+                <span *ngIf="a.status === 'COMPLETED'" class="completed-label">
+                  ✅ Completed
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
