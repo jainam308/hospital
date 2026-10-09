@@ -1,9 +1,9 @@
-# Automated Test Suite & Quality Assurance Report
+# Automated Test Suite & Quality Assurance Report — Version 2.0
 
-**Project**: Hospital OPD Management Mini-Module  
-**Tech Stack**: Spring Boot 3.4 (Java 23), Spring Data JPA, Hibernate, JUnit 5, Mockito, MockMvc, Angular 19  
+**Project**: Hospital OPD Management System (Enterprise Edition)  
+**Tech Stack**: Spring Boot 3.4 (Java 23), Spring Data JPA, Hibernate, Razorpay Java SDK, JUnit 5, Mockito, MockMvc, Angular 19  
 **Execution Date**: 2026-10-09  
-**Test Result**: 🟢 **100% Passed (24/24 Backend Tests Passed, Frontend Build Passed)**
+**Test Result**: 🟢 **100% Passed (32/32 Backend Tests Passed, Frontend Build Passed)**
 
 ---
 
@@ -11,26 +11,48 @@
 
 | Test Layer | Total Tests | Passed | Failed | Errors | Skipped | Success Rate |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Backend Unit & Service Tests** | 14 | 14 | 0 | 0 | 0 | 100% |
+| **Backend Unit & Service Tests** | 22 | 22 | 0 | 0 | 0 | 100% |
 | **Backend WebMvc Integration Tests** | 9 | 9 | 0 | 0 | 0 | 100% |
 | **Spring Boot Application Context** | 1 | 1 | 0 | 0 | 0 | 100% |
-| **Total Backend Test Suite** | **24** | **24** | **0** | **0** | **0** | **100%** |
+| **Total Backend Test Suite** | **32** | **32** | **0** | **0** | **0** | **100%** |
 | **Frontend AOT & Production Build** | 1 | 1 | 0 | 0 | 0 | 100% |
 
 ---
 
 ## 2. Test Suite Details
 
-### 2.1 Patient Management Suite (`PatientServiceTest`, `PatientControllerTest`)
+### 2.1 Doctor & Department Suite (`DoctorServiceTest`)
 
 | Test ID | Test Name | Target Layer | Scope & Verification | Status |
 | :--- | :--- | :--- | :--- | :---: |
-| `TC-PAT-01` | `testCreatePatient_Success` | `PatientService` | Verifies patient entity persistence, default timestamp generation, and DTO conversion. | ✅ PASSED |
+| `TC-DOC-01` | `testGetAllDoctors` | `DoctorService` | Verifies active doctor retrieval with department associations and fees. | ✅ PASSED |
+| `TC-DOC-02` | `testGetDoctorById` | `DoctorService` | Verifies single doctor retrieval by primary key. | ✅ PASSED |
+| `TC-DOC-03` | `testHasSlotConflict_True` | `DoctorService` | Verifies conflict detection when an active appointment exists within ±30 min window. | ✅ PASSED |
+| `TC-DOC-04` | `testHasSlotConflict_False` | `DoctorService` | Verifies no conflict returned when requested appointment slot is free. | ✅ PASSED |
+| `TC-DOC-05` | `testGetAllDepartments` | `DoctorService` | Verifies complete department roster retrieval. | ✅ PASSED |
+
+---
+
+### 2.2 Billing & Razorpay Suite (`BillingServiceTest`)
+
+| Test ID | Test Name | Target Layer | Scope & Verification | Status |
+| :--- | :--- | :--- | :--- | :---: |
+| `TC-BIL-01` | `testCreateRazorpayOrder` | `BillingService` | Verifies Razorpay order creation, order ID formatting, and paise conversion. | ✅ PASSED |
+| `TC-BIL-02` | `testVerifyRazorpayPayment_MockMode` | `BillingService` | Verifies HMAC SHA-256 signature verification and transition to `PAID` with `RAZORPAY` mode. | ✅ PASSED |
+| `TC-BIL-03` | `testProcessCashPayment` | `BillingService` | Verifies reception counter cash settlement, timestamping, and transition to `PAID`. | ✅ PASSED |
+
+---
+
+### 2.3 Patient Management Suite (`PatientServiceTest`, `PatientControllerTest`)
+
+| Test ID | Test Name | Target Layer | Scope & Verification | Status |
+| :--- | :--- | :--- | :--- | :---: |
+| `TC-PAT-01` | `testCreatePatient_Success` | `PatientService` | Verifies patient persistence with blood group, allergies, chronic conditions. | ✅ PASSED |
 | `TC-PAT-02` | `testGetAllPatients_Success` | `PatientService` | Verifies sorting order (`createdAt DESC`) and complete list retrieval. | ✅ PASSED |
 | `TC-PAT-03` | `testSearchPatients_WithQuery` | `PatientService` | Verifies case-insensitive partial match search by name or phone. | ✅ PASSED |
-| `TC-PAT-04` | `testSearchPatients_EmptyQuery` | `PatientService` | Verifies that blank/whitespace search gracefully defaults to `getAllPatients`. | ✅ PASSED |
+| `TC-PAT-04` | `testSearchPatients_EmptyQuery` | `PatientService` | Verifies blank/whitespace query safely falls back to all patients. | ✅ PASSED |
 | `TC-PAT-05` | `testGetPatientById_Success` | `PatientService` | Verifies retrieval of existing patient by primary key. | ✅ PASSED |
-| `TC-PAT-06` | `testGetPatientById_NotFound` | `PatientService` | Verifies that non-existent patient ID triggers `ResourceNotFoundException`. | ✅ PASSED |
+| `TC-PAT-06` | `testGetPatientById_NotFound` | `PatientService` | Verifies non-existent patient ID triggers `ResourceNotFoundException`. | ✅ PASSED |
 | `TC-PAT-07` | `testCreatePatient_Valid_Returns201` | `PatientController` | Verifies `POST /api/patients` returns HTTP 201 Created and JSON response. | ✅ PASSED |
 | `TC-PAT-08` | `testCreatePatient_Invalid_Returns400` | `PatientController` | Verifies Jakarta validation triggers HTTP 400 Bad Request with field errors. | ✅ PASSED |
 | `TC-PAT-09` | `testGetPatients_ReturnsList` | `PatientController` | Verifies `GET /api/patients` returns HTTP 200 OK with patient array. | ✅ PASSED |
@@ -38,7 +60,7 @@
 
 ---
 
-### 2.2 Appointment Management Suite (`AppointmentServiceTest`, `AppointmentControllerTest`)
+### 2.4 Appointment Management Suite (`AppointmentServiceTest`, `AppointmentControllerTest`)
 
 | Test ID | Test Name | Target Layer | Scope & Verification | Status |
 | :--- | :--- | :--- | :--- | :---: |
@@ -51,39 +73,39 @@
 
 ---
 
-### 2.3 Consultation & Vitals Suite (`ConsultationServiceTest`, `ConsultationControllerTest`)
+### 2.5 Consultation, Vitals & Prescriptions Suite (`ConsultationServiceTest`, `ConsultationControllerTest`)
 
 | Test ID | Test Name | Target Layer | Scope & Verification | Status |
 | :--- | :--- | :--- | :--- | :---: |
-| `TC-CON-01` | `testCreateConsultation_Success` | `ConsultationService` | Verifies vitals entry, notes saving, and atomic update of appointment to `COMPLETED`. | ✅ PASSED |
-| `TC-CON-02` | `testCreateConsultation_Duplicate` | `ConsultationService` | Verifies `BadRequestException` when duplicate consultation is submitted for same appointment. | ✅ PASSED |
-| `TC-CON-03` | `testGetConsultationsByPatient_Success` | `ConsultationService` | Verifies patient clinical history lookup ordered chronologically. | ✅ PASSED |
-| `TC-CON-04` | `testGetConsultationsByPatient_NotFound` | `ConsultationService` | Verifies `ResourceNotFoundException` when querying consultations for non-existent patient. | ✅ PASSED |
-| `TC-CON-05` | `testCreateConsultation_Returns201` | `ConsultationController` | Verifies `POST /api/consultations` returns HTTP 201 with vitals payload. | ✅ PASSED |
-| `TC-CON-06` | `testCreateConsultation_Duplicate_Returns400` | `ConsultationController` | Verifies duplicate error returns HTTP 400 Bad Request with RFC 7807 error schema. | ✅ PASSED |
+| `TC-CON-01` | `testCreateConsultation_Success` | `ConsultationService` | Verifies vitals entry, notes, Rx persistence, and appointment to `COMPLETED`. | ✅ PASSED |
+| `TC-CON-02` | `testCreateConsultation_Duplicate` | `ConsultationService` | Verifies `BadRequestException` on duplicate consultation submission. | ✅ PASSED |
+| `TC-CON-03` | `testGetConsultationsByPatient_Success` | `ConsultationService` | Verifies patient clinical history lookup with Rx items attached. | ✅ PASSED |
+| `TC-CON-04` | `testGetConsultationsByPatient_NotFound` | `ConsultationService` | Verifies `ResourceNotFoundException` for non-existent patient. | ✅ PASSED |
+| `TC-CON-05` | `testCreateConsultation_Returns201` | `ConsultationController` | Verifies `POST /api/consultations` returns HTTP 201 with vitals & Rx payload. | ✅ PASSED |
+| `TC-CON-06` | `testCreateConsultation_Duplicate_Returns400` | `ConsultationController` | Verifies duplicate error returns HTTP 400 Bad Request with RFC 7807 schema. | ✅ PASSED |
 | `TC-CON-07` | `testGetConsultationsByPatient_ReturnsList` | `ConsultationController` | Verifies `GET /api/consultations/patient/{id}` returns HTTP 200 OK. | ✅ PASSED |
 
 ---
 
-### 2.4 Application Context & End-to-End Bootstrap
+### 2.6 Application Context & End-to-End Bootstrap
 
 | Test ID | Test Name | Scope & Verification | Status |
 | :--- | :--- | :--- | :---: |
-| `TC-CTX-01` | `contextLoads` | Boots full Spring Boot application context with H2 test profile and verifies all beans. | ✅ PASSED |
+| `TC-CTX-01` | `contextLoads` | Boots full Spring Boot application context with H2 test profile, DataInitializer seeding, and verifies all 7 repositories and 5 service beans. | ✅ PASSED |
 
 ---
 
-### 2.5 Frontend Build & Bundle Verification
+### 2.7 Frontend Build & Bundle Verification
 
 | Check | Scope | Tool | Status |
 | :--- | :--- | :--- | :---: |
-| **AOT Compilation** | Ahead-of-Time TypeScript compilation of all components, services, and models. | Angular CLI 19 | ✅ PASSED |
-| **Bundle Generation** | Minification and tree-shaking of main, polyfills, runtime, and styles chunks. | Webpack / esbuild | ✅ PASSED (369.68 kB) |
-| **Template Validation** | Reactive form bindings and strict template type-checking. | Angular Compiler | ✅ PASSED |
+| **AOT Compilation** | Ahead-of-Time TypeScript compilation of all 5 components, services, and models. | Angular CLI 19 | ✅ PASSED |
+| **Bundle Generation** | Minification and tree-shaking of main, polyfills, runtime, and styles chunks. | Webpack / esbuild | ✅ PASSED (415.45 kB) |
+| **Template Validation** | Strict template type-checking, Reactive Forms validation, and Razorpay script linkage. | Angular Compiler | ✅ PASSED |
 
 ---
 
-## 3. Maven Build & Execution Output
+## 3. Maven Build & Execution Summary
 
 ```
 [INFO] -------------------------------------------------------
@@ -99,14 +121,18 @@
 [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
 [INFO] Running com.hospital.opd.service.AppointmentServiceTest
 [INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Running com.hospital.opd.service.BillingServiceTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
 [INFO] Running com.hospital.opd.service.ConsultationServiceTest
 [INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Running com.hospital.opd.service.DoctorServiceTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
 [INFO] Running com.hospital.opd.service.PatientServiceTest
 [INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0
 [INFO] 
 [INFO] Results:
 [INFO] 
-[INFO] Tests run: 24, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 32, Failures: 0, Errors: 0, Skipped: 0
 [INFO] 
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
