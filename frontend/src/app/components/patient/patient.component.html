@@ -1,0 +1,178 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Patient Management</h1>
+      <p class="page-subtitle">Register new OPD patients and search existing patient records</p>
+    </div>
+    <div class="header-stats">
+      <div class="stat-card">
+        <span class="stat-num">{{ patients.length }}</span>
+        <span class="stat-lbl">Total Registered</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alert Messages -->
+  <div *ngIf="successMessage" class="alert alert-success">
+    <span>✅ {{ successMessage }}</span>
+    <button class="close-btn" (click)="successMessage = ''">&times;</button>
+  </div>
+  <div *ngIf="errorMessage" class="alert alert-danger">
+    <span>⚠️ {{ errorMessage }}</span>
+    <button class="close-btn" (click)="errorMessage = ''">&times;</button>
+  </div>
+
+  <div class="grid-layout">
+    <!-- Registration Form Card -->
+    <div class="card form-card">
+      <div class="card-header">
+        <h2 class="card-title">📝 Register New Patient</h2>
+      </div>
+      <form [formGroup]="patientForm" (ngSubmit)="onSubmit()" class="form-body">
+        <div class="form-group">
+          <label for="name">Full Name <span class="required">*</span></label>
+          <input
+            id="name"
+            type="text"
+            formControlName="name"
+            placeholder="e.g. John Doe"
+            [class.invalid]="isFieldInvalid('name')"
+          />
+          <div *ngIf="isFieldInvalid('name')" class="field-error">
+            Full name is required (at least 2 characters)
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group half">
+            <label for="gender">Gender <span class="required">*</span></label>
+            <select
+              id="gender"
+              formControlName="gender"
+              [class.invalid]="isFieldInvalid('gender')"
+            >
+              <option value="MALE">Male</option>
+              <option value="FEMALE">Female</option>
+              <option value="OTHER">Other</option>
+            </select>
+            <div *ngIf="isFieldInvalid('gender')" class="field-error">
+              Please select gender
+            </div>
+          </div>
+
+          <div class="form-group half">
+            <label for="age">Age (Years) <span class="required">*</span></label>
+            <input
+              id="age"
+              type="number"
+              min="0"
+              max="150"
+              formControlName="age"
+              placeholder="e.g. 32"
+              [class.invalid]="isFieldInvalid('age')"
+            />
+            <div *ngIf="isFieldInvalid('age')" class="field-error">
+              Valid age (0 - 150) is required
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="phoneNumber">Phone Number <span class="required">*</span></label>
+          <input
+            id="phoneNumber"
+            type="tel"
+            formControlName="phoneNumber"
+            placeholder="e.g. 9876543210"
+            [class.invalid]="isFieldInvalid('phoneNumber')"
+          />
+          <div *ngIf="isFieldInvalid('phoneNumber')" class="field-error">
+            Valid phone number required (7-15 digits)
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" [disabled]="patientForm.invalid || isSubmitting">
+            <span *ngIf="isSubmitting">Saving...</span>
+            <span *ngIf="!isSubmitting">➕ Register Patient</span>
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="resetForm()">Reset</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Patients List & Search Card -->
+    <div class="card list-card">
+      <div class="card-header search-header">
+        <h2 class="card-title">📋 Patient Directory</h2>
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            (input)="onSearch()"
+            placeholder="Search by name or phone..."
+          />
+          <button *ngIf="searchQuery" class="clear-search" (click)="clearSearch()">&times;</button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <div *ngIf="isLoading" class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading patient records...</p>
+        </div>
+
+        <div *ngIf="!isLoading && patients.length === 0" class="empty-state">
+          <div class="empty-icon">📂</div>
+          <p>No patients found.</p>
+          <span class="empty-sub">Register a patient using the form or clear search filters.</span>
+        </div>
+
+        <table *ngIf="!isLoading && patients.length > 0" class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Patient Name</th>
+              <th>Gender</th>
+              <th>Age</th>
+              <th>Phone</th>
+              <th>Registered</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of patients">
+              <td class="bold">#{{ p.id }}</td>
+              <td class="patient-name">
+                <strong>{{ p.name }}</strong>
+              </td>
+              <td>
+                <span class="badge" [ngClass]="p.gender.toLowerCase()">{{ p.gender }}</span>
+              </td>
+              <td>{{ p.age }} yrs</td>
+              <td class="phone-cell">📞 {{ p.phoneNumber }}</td>
+              <td class="date-cell">{{ p.createdAt | date:'shortDate' }}</td>
+              <td class="actions-cell">
+                <button
+                  class="btn-action btn-appt"
+                  (click)="bookAppointment(p)"
+                  title="Book Appointment"
+                >
+                  📅 Book Appt
+                </button>
+                <button
+                  class="btn-action btn-history"
+                  (click)="viewHistory(p)"
+                  title="View Consultation History"
+                >
+                  🩺 History
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
