@@ -37,7 +37,7 @@ public class PatientServiceImpl implements PatientService {
         Optional<Patient> existingByPhone = patientRepository.findByPhoneNumber(cleanPhone);
         if (existingByPhone.isPresent()) {
             Patient p = existingByPhone.get();
-            throw new BadRequestException("A patient with phone number '" + cleanPhone + "' is already registered (Patient ID #" + p.getId() + ": " + p.getName() + "). Duplicate registrations are not permitted.");
+            throw new BadRequestException("User already exists! A patient with phone number '" + cleanPhone + "' is already registered as '" + p.getName() + "' (Patient ID #" + p.getId() + "). Duplicate registration is not permitted.");
         }
 
         // 2. Business Logic: Prevent duplicate emails
@@ -45,7 +45,7 @@ public class PatientServiceImpl implements PatientService {
             Optional<Patient> existingByEmail = patientRepository.findByEmailIgnoreCase(cleanEmail);
             if (existingByEmail.isPresent()) {
                 Patient p = existingByEmail.get();
-                throw new BadRequestException("A patient with email address '" + cleanEmail + "' is already registered (Patient ID #" + p.getId() + ": " + p.getName() + "). Duplicate registrations are not permitted.");
+                throw new BadRequestException("User already exists! A patient with email address '" + cleanEmail + "' is already registered as '" + p.getName() + "' (Patient ID #" + p.getId() + "). Duplicate registration is not permitted.");
             }
         }
 

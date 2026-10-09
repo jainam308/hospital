@@ -19,6 +19,8 @@ export class PatientComponent implements OnInit {
   errorMessage: string = '';
 
   bloodGroups: string[] = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+  existingPatientMatch: Patient | null = null;
+  existingMatchField: 'phone' | 'email' | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -42,6 +44,37 @@ export class PatientComponent implements OnInit {
       allergies: [''],
       chronicConditions: ['']
     });
+
+    this.patientForm.valueChanges.subscribe(() => {
+      this.checkDuplicateLive();
+    });
+  }
+
+  checkDuplicateLive(): void {
+    const rawPhone = this.patientForm.get('phoneNumber')?.value;
+    const cleanPhone = rawPhone ? rawPhone.trim().replace(/[\s\-()]/g, '') : '';
+    const cleanEmail = this.patientForm.get('email')?.value ? this.patientForm.get('email')?.value.trim().toLowerCase() : '';
+
+    if (cleanPhone && cleanPhone.length >= 7) {
+      const match = this.patients.find(p => p.phoneNumber && p.phoneNumber.replace(/[\s\-()]/g, '') === cleanPhone);
+      if (match) {
+        this.existingPatientMatch = match;
+        this.existingMatchField = 'phone';
+        return;
+      }
+    }
+
+    if (cleanEmail && cleanEmail.length > 3) {
+      const match = this.patients.find(p => p.email && p.email.trim().toLowerCase() === cleanEmail);
+      if (match) {
+        this.existingPatientMatch = match;
+        this.existingMatchField = 'email';
+        return;
+      }
+    }
+
+    this.existingPatientMatch = null;
+    this.existingMatchField = null;
   }
 
   loadPatients(): void {
@@ -50,6 +83,7 @@ export class PatientComponent implements OnInit {
       next: (data) => {
         this.patients = data;
         this.isLoading = false;
+        this.checkDuplicateLive();
       },
       error: () => {
         this.errorMessage = 'Failed to load patients from server.';
@@ -70,6 +104,11 @@ export class PatientComponent implements OnInit {
   onSubmit(): void {
     if (this.patientForm.invalid) {
       this.patientForm.markAllAsTouched();
+      return;
+    }
+
+    if (this.existingPatientMatch) {
+      this.errorMessage = `User already exists! A patient with this ${this.existingMatchField === 'phone' ? 'phone number' : 'email'} is already registered as "${this.existingPatientMatch.name}" (Patient ID #${this.existingPatientMatch.id}). Duplicate registration is not permitted.`;
       return;
     }
 
@@ -103,6 +142,13 @@ export class PatientComponent implements OnInit {
       allergies: '',
       chronicConditions: ''
     });
+    this.existingPatientMatch = null;
+    this.existingMatchField = null;
+  }
+
+  filterToPatient(patient: Patient): void {
+    this.searchQuery = patient.phoneNumber || patient.name;
+    this.loadPatients();
   }
 
   isFieldInvalid(fieldName: string): boolean {

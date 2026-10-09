@@ -65,6 +65,26 @@ public class DataInitializer implements CommandLineRunner {
             doctorRepository.save(new Doctor(null, "Dr. Sneha Kulkarni", pediatrics, "Pediatric Specialist", BigDecimal.valueOf(600.00), "Room 108", DoctorShift.ALL_DAY, 20, 30));
         }
 
+        // Self-heal existing doctor rows in database (e.g. from schema update defaults)
+        doctorRepository.findAll().forEach(doc -> {
+            boolean changed = false;
+            if (doc.getMaxDailyQuota() == null || doc.getMaxDailyQuota() <= 0) {
+                doc.setMaxDailyQuota(20);
+                changed = true;
+            }
+            if (doc.getSlotDurationMinutes() == null || doc.getSlotDurationMinutes() <= 0) {
+                doc.setSlotDurationMinutes(30);
+                changed = true;
+            }
+            if (doc.getShift() == null) {
+                doc.setShift(DoctorShift.ALL_DAY);
+                changed = true;
+            }
+            if (changed) {
+                doctorRepository.save(doc);
+            }
+        });
+
         if (patientRepository.count() > 0) {
             log.info("Database already contains patients. Skipping initial patient seeding.");
             return;

@@ -68,6 +68,7 @@ class PatientServiceTest {
         when(patientRepository.findByPhoneNumber("9876543210")).thenReturn(Optional.of(mockPatient));
 
         BadRequestException ex = assertThrows(BadRequestException.class, () -> patientService.createPatient(inputDto));
+        assertTrue(ex.getMessage().contains("User already exists"));
         assertTrue(ex.getMessage().contains("already registered"));
         verify(patientRepository, never()).save(any());
     }
@@ -81,6 +82,7 @@ class PatientServiceTest {
         when(patientRepository.findByEmailIgnoreCase("rohan@example.com")).thenReturn(Optional.of(mockPatient));
 
         BadRequestException ex = assertThrows(BadRequestException.class, () -> patientService.createPatient(inputDto));
+        assertTrue(ex.getMessage().contains("User already exists"));
         assertTrue(ex.getMessage().contains("already registered"));
         verify(patientRepository, never()).save(any());
     }

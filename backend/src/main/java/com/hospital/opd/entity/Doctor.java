@@ -133,7 +133,7 @@ public class Doctor {
     }
 
     public Integer getMaxDailyQuota() {
-        return maxDailyQuota;
+        return (maxDailyQuota != null && maxDailyQuota > 0) ? maxDailyQuota : 20;
     }
 
     public void setMaxDailyQuota(Integer maxDailyQuota) {
@@ -141,7 +141,7 @@ public class Doctor {
     }
 
     public Integer getSlotDurationMinutes() {
-        return slotDurationMinutes;
+        return (slotDurationMinutes != null && slotDurationMinutes > 0) ? slotDurationMinutes : 30;
     }
 
     public void setSlotDurationMinutes(Integer slotDurationMinutes) {

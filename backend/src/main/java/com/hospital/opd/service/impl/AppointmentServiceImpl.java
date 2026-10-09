@@ -88,8 +88,10 @@ public class AppointmentServiceImpl implements AppointmentService {
             long bookedCount = appointmentRepository.countByDoctorNameIgnoreCaseAndAppointmentDateTimeBetweenAndStatusNot(
                     fullDoctorString, startOfDay, endOfDay, AppointmentStatus.CANCELLED
             );
-            if (bookedCount >= doctor.getMaxDailyQuota()) {
-                throw new BadRequestException("Dr. " + doctor.getName() + " has reached the maximum appointment quota (" + doctor.getMaxDailyQuota() + " patients) for " + reqTime.toLocalDate() + ". Please choose another date or doctor.");
+            int quota = (doctor.getMaxDailyQuota() != null && doctor.getMaxDailyQuota() > 0) ? doctor.getMaxDailyQuota() : 20;
+            if (bookedCount >= quota) {
+                String docName = doctor.getName().startsWith("Dr.") ? doctor.getName() : "Dr. " + doctor.getName();
+                throw new BadRequestException(docName + " has reached the maximum appointment quota (" + quota + " patients) for " + reqTime.toLocalDate() + ". Please choose another date or doctor.");
             }
         }
 

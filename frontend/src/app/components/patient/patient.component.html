@@ -17,8 +17,14 @@
     <span>✅ {{ successMessage }}</span>
     <button class="close-btn" (click)="successMessage = ''">&times;</button>
   </div>
-  <div *ngIf="errorMessage" class="alert alert-danger">
-    <span>⚠️ {{ errorMessage }}</span>
+  <div *ngIf="errorMessage" class="alert alert-danger" [class.alert-exists]="errorMessage.includes('already exists') || errorMessage.includes('User already exists')">
+    <div class="alert-content-row">
+      <span class="alert-symbol">⚠️</span>
+      <div class="alert-text-body">
+        <strong *ngIf="errorMessage.includes('already exists') || errorMessage.includes('User already exists')" class="dup-strong-title">User Already Exists! </strong>
+        <span>{{ errorMessage }}</span>
+      </div>
+    </div>
     <button class="close-btn" (click)="errorMessage = ''">&times;</button>
   </div>
 
@@ -85,7 +91,7 @@
               type="tel"
               formControlName="phoneNumber"
               placeholder="e.g. 9876543210"
-              [class.invalid]="isFieldInvalid('phoneNumber')"
+              [class.invalid]="isFieldInvalid('phoneNumber') || (existingPatientMatch && existingMatchField === 'phone')"
             />
             <div *ngIf="isFieldInvalid('phoneNumber')" class="field-error">
               Valid phone number required
@@ -99,11 +105,41 @@
               type="email"
               formControlName="email"
               placeholder="e.g. patient@example.com"
-              [class.invalid]="isFieldInvalid('email')"
+              [class.invalid]="isFieldInvalid('email') || (existingPatientMatch && existingMatchField === 'email')"
             />
             <div *ngIf="isFieldInvalid('email')" class="field-error">
               Valid email format required
             </div>
+          </div>
+        </div>
+
+        <!-- Live Duplicate User Alert Banner -->
+        <div *ngIf="existingPatientMatch" class="duplicate-user-box">
+          <div class="dup-box-header">
+            <span class="dup-badge">⚠️ USER ALREADY EXISTS</span>
+            <span class="dup-sub">Matched by {{ existingMatchField === 'phone' ? 'phone number' : 'email address' }}</span>
+          </div>
+          <div class="dup-box-details">
+            <div class="dup-row">
+              <span class="dup-lbl">Patient Name:</span>
+              <span class="dup-val"><strong>{{ existingPatientMatch.name }}</strong> (ID #{{ existingPatientMatch.id }})</span>
+            </div>
+            <div class="dup-row">
+              <span class="dup-lbl">Phone:</span>
+              <span class="dup-val">📞 {{ existingPatientMatch.phoneNumber }}</span>
+            </div>
+            <div *ngIf="existingPatientMatch.email" class="dup-row">
+              <span class="dup-lbl">Email:</span>
+              <span class="dup-val">✉️ {{ existingPatientMatch.email }}</span>
+            </div>
+          </div>
+          <div class="dup-box-actions">
+            <button type="button" class="btn-dup btn-dup-appt" (click)="bookAppointment(existingPatientMatch)">
+              📅 Book Appointment
+            </button>
+            <button type="button" class="btn-dup btn-dup-view" (click)="filterToPatient(existingPatientMatch)">
+              🔍 Find in Directory
+            </button>
           </div>
         </div>
 

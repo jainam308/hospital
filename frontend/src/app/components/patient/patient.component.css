@@ -436,3 +436,134 @@ input.invalid, select.invalid {
 .muted-dash {
   color: #94a3b8;
 }
+
+/* Enhanced Duplicate User Alert & Box */
+.alert-content-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.alert-symbol {
+  font-size: 1.3rem;
+  line-height: 1.2;
+}
+
+.alert-text-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.dup-strong-title {
+  color: #991b1b;
+  font-size: 1rem;
+}
+
+.alert.alert-exists {
+  background: #fef2f2;
+  border: 1.5px solid #ef4444;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.12);
+}
+
+.duplicate-user-box {
+  background: #fff1f2;
+  border: 1.5px solid #fecdd3;
+  border-left: 4px solid #e11d48;
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 1.2rem;
+  animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dup-box-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.dup-badge {
+  background: #e11d48;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.dup-sub {
+  font-size: 0.75rem;
+  color: #9f1239;
+  font-weight: 500;
+}
+
+.dup-box-details {
+  background: rgba(255, 255, 255, 0.65);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.dup-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.dup-row:last-child {
+  margin-bottom: 0;
+}
+
+.dup-lbl {
+  color: #881337;
+  font-weight: 600;
+  width: 95px;
+}
+
+.dup-val {
+  color: #0f172a;
+}
+
+.dup-box-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-dup {
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+}
+
+.btn-dup-appt {
+  background: #e11d48;
+  color: #ffffff;
+}
+
+.btn-dup-appt:hover {
+  background: #be123c;
+}
+
+.btn-dup-view {
+  background: #ffffff;
+  color: #be123c;
+  border-color: #fecdd3;
+}
+
+.btn-dup-view:hover {
+  background: #ffe4e6;
+}
+
