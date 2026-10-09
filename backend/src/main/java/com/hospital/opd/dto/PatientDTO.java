@@ -24,6 +24,10 @@ public class PatientDTO {
     @Pattern(regexp = "^[0-9+\\-\\s()]{7,20}$", message = "Phone number format is invalid")
     private String phoneNumber;
 
+    private String bloodGroup;
+    private String allergies;
+    private String chronicConditions;
+
     private LocalDateTime createdAt;
 
     public PatientDTO() {
@@ -35,6 +39,19 @@ public class PatientDTO {
         this.gender = gender;
         this.age = age;
         this.phoneNumber = phoneNumber;
+        this.createdAt = createdAt;
+    }
+
+    public PatientDTO(Long id, String name, Gender gender, Integer age, String phoneNumber,
+                      String bloodGroup, String allergies, String chronicConditions, LocalDateTime createdAt) {
+        this.id = id;
+        this.name = name;
+        this.gender = gender;
+        this.age = age;
+        this.phoneNumber = phoneNumber;
+        this.bloodGroup = bloodGroup;
+        this.allergies = allergies;
+        this.chronicConditions = chronicConditions;
         this.createdAt = createdAt;
     }
 
@@ -76,6 +93,30 @@ public class PatientDTO {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public String getBloodGroup() {
+        return bloodGroup;
+    }
+
+    public void setBloodGroup(String bloodGroup) {
+        this.bloodGroup = bloodGroup;
+    }
+
+    public String getAllergies() {
+        return allergies;
+    }
+
+    public void setAllergies(String allergies) {
+        this.allergies = allergies;
+    }
+
+    public String getChronicConditions() {
+        return chronicConditions;
+    }
+
+    public void setChronicConditions(String chronicConditions) {
+        this.chronicConditions = chronicConditions;
     }
 
     public LocalDateTime getCreatedAt() {

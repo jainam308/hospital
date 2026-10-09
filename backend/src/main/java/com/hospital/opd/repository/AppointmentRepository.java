@@ -22,4 +22,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
            "CAST(a.appointmentDateTime AS date) = CURRENT_DATE " +
            "ORDER BY a.appointmentDateTime ASC")
     List<Appointment> findTodayAppointments();
+
+    List<Appointment> findByDoctorNameIgnoreCaseAndAppointmentDateTimeBetweenAndStatusNot(
+            String doctorName, LocalDateTime start, LocalDateTime end, AppointmentStatus status);
 }

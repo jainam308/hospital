@@ -1,6 +1,8 @@
 package com.hospital.opd.dto;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ConsultationResponseDTO {
 
@@ -8,11 +10,15 @@ public class ConsultationResponseDTO {
     private Long appointmentId;
     private Long patientId;
     private String patientName;
+    private String patientPhone;
+    private String bloodGroup;
+    private String allergies;
     private String doctorName;
     private String bloodPressure;
     private Integer heartRate;
     private Double temperature;
     private String notes;
+    private List<PrescriptionItemDTO> prescriptionItems = new ArrayList<>();
     private LocalDateTime consultationDate;
 
     public ConsultationResponseDTO() {
@@ -65,6 +71,30 @@ public class ConsultationResponseDTO {
         this.patientName = patientName;
     }
 
+    public String getPatientPhone() {
+        return patientPhone;
+    }
+
+    public void setPatientPhone(String patientPhone) {
+        this.patientPhone = patientPhone;
+    }
+
+    public String getBloodGroup() {
+        return bloodGroup;
+    }
+
+    public void setBloodGroup(String bloodGroup) {
+        this.bloodGroup = bloodGroup;
+    }
+
+    public String getAllergies() {
+        return allergies;
+    }
+
+    public void setAllergies(String allergies) {
+        this.allergies = allergies;
+    }
+
     public String getDoctorName() {
         return doctorName;
     }
@@ -103,6 +133,14 @@ public class ConsultationResponseDTO {
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public List<PrescriptionItemDTO> getPrescriptionItems() {
+        return prescriptionItems;
+    }
+
+    public void setPrescriptionItems(List<PrescriptionItemDTO> prescriptionItems) {
+        this.prescriptionItems = prescriptionItems;
     }
 
     public LocalDateTime getConsultationDate() {

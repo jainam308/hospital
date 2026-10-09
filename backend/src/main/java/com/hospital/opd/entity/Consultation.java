@@ -1,7 +1,10 @@
 package com.hospital.opd.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "consultations", indexes = {
@@ -33,6 +36,10 @@ public class Consultation {
 
     @Column(columnDefinition = "TEXT")
     private String notes;
+
+    @OneToMany(mappedBy = "consultation", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JsonManagedReference
+    private List<PrescriptionItem> prescriptionItems = new ArrayList<>();
 
     @Column(name = "consultation_date", nullable = false)
     private LocalDateTime consultationDate;
@@ -111,6 +118,19 @@ public class Consultation {
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public List<PrescriptionItem> getPrescriptionItems() {
+        return prescriptionItems;
+    }
+
+    public void setPrescriptionItems(List<PrescriptionItem> prescriptionItems) {
+        this.prescriptionItems = prescriptionItems;
+    }
+
+    public void addPrescriptionItem(PrescriptionItem item) {
+        prescriptionItems.add(item);
+        item.setConsultation(this);
     }
 
     public LocalDateTime getConsultationDate() {

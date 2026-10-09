@@ -27,6 +27,15 @@ public class Patient {
     @Column(name = "phone_number", nullable = false, length = 20)
     private String phoneNumber;
 
+    @Column(name = "blood_group", length = 10)
+    private String bloodGroup;
+
+    @Column(name = "allergies", length = 255)
+    private String allergies;
+
+    @Column(name = "chronic_conditions", length = 255)
+    private String chronicConditions;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -39,6 +48,18 @@ public class Patient {
         this.gender = gender;
         this.age = age;
         this.phoneNumber = phoneNumber;
+    }
+
+    public Patient(Long id, String name, Gender gender, Integer age, String phoneNumber,
+                   String bloodGroup, String allergies, String chronicConditions) {
+        this.id = id;
+        this.name = name;
+        this.gender = gender;
+        this.age = age;
+        this.phoneNumber = phoneNumber;
+        this.bloodGroup = bloodGroup;
+        this.allergies = allergies;
+        this.chronicConditions = chronicConditions;
     }
 
     @PrePersist
@@ -86,6 +107,30 @@ public class Patient {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public String getBloodGroup() {
+        return bloodGroup;
+    }
+
+    public void setBloodGroup(String bloodGroup) {
+        this.bloodGroup = bloodGroup;
+    }
+
+    public String getAllergies() {
+        return allergies;
+    }
+
+    public void setAllergies(String allergies) {
+        this.allergies = allergies;
+    }
+
+    public String getChronicConditions() {
+        return chronicConditions;
+    }
+
+    public void setChronicConditions(String chronicConditions) {
+        this.chronicConditions = chronicConditions;
     }
 
     public LocalDateTime getCreatedAt() {

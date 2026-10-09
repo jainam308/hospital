@@ -28,6 +28,9 @@ public class PatientServiceImpl implements PatientService {
         patient.setGender(patientDTO.getGender());
         patient.setAge(patientDTO.getAge());
         patient.setPhoneNumber(patientDTO.getPhoneNumber().trim());
+        patient.setBloodGroup(patientDTO.getBloodGroup() != null ? patientDTO.getBloodGroup().trim() : null);
+        patient.setAllergies(patientDTO.getAllergies() != null ? patientDTO.getAllergies().trim() : null);
+        patient.setChronicConditions(patientDTO.getChronicConditions() != null ? patientDTO.getChronicConditions().trim() : null);
 
         Patient saved = patientRepository.save(patient);
         return mapToDTO(saved);
@@ -69,6 +72,9 @@ public class PatientServiceImpl implements PatientService {
                 patient.getGender(),
                 patient.getAge(),
                 patient.getPhoneNumber(),
+                patient.getBloodGroup(),
+                patient.getAllergies(),
+                patient.getChronicConditions(),
                 patient.getCreatedAt()
         );
     }
