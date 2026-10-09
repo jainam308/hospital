@@ -1,14 +1,21 @@
 <div class="page-container">
   <div class="page-header">
     <div>
-      <h1 class="page-title">Doctor Consultation & Clinical Summary</h1>
-      <p class="page-subtitle">Record patient vitals, clinical notes, and review historical consultations</p>
+      <h1 class="page-title">Doctor Consultation & Digital E-Prescriptions</h1>
+      <p class="page-subtitle">Record patient vitals, review drug allergies, prescribe medicines, and complete visit</p>
     </div>
   </div>
 
   <!-- Alerts -->
   <div *ngIf="successMessage" class="alert alert-success">
-    <span>✅ {{ successMessage }}</span>
+    <div>
+      <span>✅ {{ successMessage }}</span>
+      <div *ngIf="recentAppointmentId" class="mt-2">
+        <button class="btn btn-sm btn-billing-link" (click)="goToBilling(recentAppointmentId)">
+          💳 Collect Payment / View Invoice for Appt #{{ recentAppointmentId }} &rarr;
+        </button>
+      </div>
+    </div>
     <button class="close-btn" (click)="successMessage = ''">&times;</button>
   </div>
   <div *ngIf="errorMessage" class="alert alert-danger">
@@ -20,7 +27,7 @@
     <!-- Consultation Entry Form Card -->
     <div class="card form-card">
       <div class="card-header">
-        <h2 class="card-title">🩺 Record Consultation</h2>
+        <h2 class="card-title">🩺 Record Consultation & Rx</h2>
       </div>
       <form [formGroup]="consultationForm" (ngSubmit)="onSubmit()" class="form-body">
         <div class="form-group">
@@ -44,7 +51,7 @@
           </div>
         </div>
 
-        <!-- Selected Appointment Details Box -->
+        <!-- Selected Patient Medical Profile Box -->
         <div *ngIf="selectedAppointment" class="selected-appt-card">
           <div class="appt-row">
             <span class="appt-label">Patient:</span>
@@ -54,9 +61,25 @@
             <span class="appt-label">Doctor:</span>
             <span>{{ selectedAppointment.doctorName }}</span>
           </div>
-          <div class="appt-row">
-            <span class="appt-label">Slot:</span>
-            <span>{{ selectedAppointment.appointmentDateTime | date:'medium' }}</span>
+
+          <!-- Medical Profile Badges -->
+          <div *ngIf="selectedPatient" class="medical-summary-row">
+            <span *ngIf="selectedPatient.bloodGroup" class="badge-mini badge-blood">
+              🩸 {{ selectedPatient.bloodGroup }}
+            </span>
+            <span *ngIf="selectedPatient.chronicConditions && selectedPatient.chronicConditions !== 'None'" class="badge-mini badge-condition">
+              🩺 {{ selectedPatient.chronicConditions }}
+            </span>
+          </div>
+
+          <!-- High-Priority Drug Allergy Alert -->
+          <div *ngIf="selectedPatient?.allergies && selectedPatient?.allergies?.toLowerCase() !== 'none'" class="allergy-critical-box">
+            <span class="allergy-alert-icon">🚨</span>
+            <div>
+              <strong>CRITICAL DRUG ALLERGIES:</strong>
+              <div class="allergy-list-text">{{ selectedPatient?.allergies }}</div>
+              <small>Do not prescribe conflicting compounds!</small>
+            </div>
           </div>
         </div>
 
@@ -115,9 +138,9 @@
           <label for="notes">Doctor's Consultation Notes <span class="required">*</span></label>
           <textarea
             id="notes"
-            rows="4"
+            rows="3"
             formControlName="notes"
-            placeholder="Enter clinical observations, diagnosis, treatment, and prescribed medications..."
+            placeholder="Enter clinical observations, diagnosis, dietary advice..."
             [class.invalid]="isFieldInvalid('notes')"
           ></textarea>
           <div *ngIf="isFieldInvalid('notes')" class="field-error">
@@ -125,10 +148,79 @@
           </div>
         </div>
 
-        <div class="form-actions">
+        <!-- Digital E-Prescription Builder Section -->
+        <div class="rx-section-header">
+          <div class="section-title mb-0">💊 Digital E-Prescription (Rx)</div>
+          <button type="button" class="btn btn-outline-rx" (click)="addPrescriptionRow()">
+            ➕ Add Medicine
+          </button>
+        </div>
+
+        <div *ngIf="prescriptionItems.length === 0" class="rx-empty-hint">
+          <span>No medicines added yet. Click <strong>+ Add Medicine</strong> to generate a digital prescription.</span>
+        </div>
+
+        <div *ngFor="let item of prescriptionItems; let i = index" class="rx-item-card">
+          <div class="rx-card-top">
+            <span class="rx-row-num">#{{ i + 1 }}</span>
+            <button type="button" class="btn-remove-rx" (click)="removePrescriptionRow(i)" title="Remove medicine">✕</button>
+          </div>
+          <div class="form-row">
+            <div class="form-group half">
+              <label>Medicine Name <span class="required">*</span></label>
+              <input
+                type="text"
+                [(ngModel)]="item.medicineName"
+                [ngModelOptions]="{standalone: true}"
+                placeholder="e.g. Paracetamol 650mg"
+              />
+            </div>
+            <div class="form-group half">
+              <label>Dosage</label>
+              <input
+                type="text"
+                [(ngModel)]="item.dosage"
+                [ngModelOptions]="{standalone: true}"
+                placeholder="e.g. 650mg / 1 tablet"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group half">
+              <label>Frequency</label>
+              <select [(ngModel)]="item.frequency" [ngModelOptions]="{standalone: true}">
+                <option value="1-0-1 (Twice daily)">1-0-1 (Twice daily)</option>
+                <option value="1-1-1 (Thrice daily)">1-1-1 (Thrice daily)</option>
+                <option value="1-0-0 (Morning only)">1-0-0 (Morning only)</option>
+                <option value="0-0-1 (Night only)">0-0-1 (Night only)</option>
+                <option value="PRN (As needed)">PRN (As needed)</option>
+              </select>
+            </div>
+            <div class="form-group half">
+              <label>Duration</label>
+              <input
+                type="text"
+                [(ngModel)]="item.duration"
+                [ngModelOptions]="{standalone: true}"
+                placeholder="e.g. 5 days / 1 week"
+              />
+            </div>
+          </div>
+          <div class="form-group mb-0">
+            <label>Specific Instructions</label>
+            <input
+              type="text"
+              [(ngModel)]="item.instructions"
+              [ngModelOptions]="{standalone: true}"
+              placeholder="e.g. Take after meals with warm water"
+            />
+          </div>
+        </div>
+
+        <div class="form-actions mt-3">
           <button type="submit" class="btn btn-primary" [disabled]="consultationForm.invalid || isSubmitting">
             <span *ngIf="isSubmitting">Saving & Completing...</span>
-            <span *ngIf="!isSubmitting">✅ Mark Complete & Save Summary</span>
+            <span *ngIf="!isSubmitting">✅ Save Consultation & Generate Bill</span>
           </button>
         </div>
       </form>
@@ -195,13 +287,49 @@
               </div>
             </div>
 
+            <!-- Medical Profile badges in past consultation -->
+            <div *ngIf="c.patientBloodGroup || c.patientAllergies" class="past-medical-summary">
+              <span *ngIf="c.patientBloodGroup" class="badge-mini badge-blood">🩸 {{ c.patientBloodGroup }}</span>
+              <span *ngIf="c.patientAllergies && c.patientAllergies !== 'None'" class="badge-mini badge-allergy">
+                🚨 Allergies: {{ c.patientAllergies }}
+              </span>
+            </div>
+
             <div class="c-notes-box">
               <span class="notes-label">Clinical Notes & Observations:</span>
               <p class="notes-text">{{ c.notes }}</p>
             </div>
 
+            <!-- E-Prescription Items Slip -->
+            <div *ngIf="c.prescriptionItems && c.prescriptionItems.length > 0" class="rx-slip-box">
+              <div class="rx-slip-title">💊 Digital Prescription (Rx)</div>
+              <table class="rx-table">
+                <thead>
+                  <tr>
+                    <th>Medicine</th>
+                    <th>Dosage</th>
+                    <th>Frequency</th>
+                    <th>Duration</th>
+                    <th>Instructions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let rx of c.prescriptionItems">
+                    <td><strong>{{ rx.medicineName }}</strong></td>
+                    <td>{{ rx.dosage }}</td>
+                    <td><span class="freq-tag">{{ rx.frequency }}</span></td>
+                    <td>{{ rx.duration }}</td>
+                    <td><small>{{ rx.instructions }}</small></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
             <div class="c-card-footer">
               <small class="footer-ref">Appointment Ref: #{{ c.appointmentId }} | Consultation ID: #{{ c.id }}</small>
+              <button class="btn-invoice-link" (click)="goToBilling(c.appointmentId)">
+                🧾 View / Pay Invoice
+              </button>
             </div>
           </div>
         </div>

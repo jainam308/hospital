@@ -9,6 +9,7 @@ import { NavbarComponent } from './components/navbar/navbar.component';
 import { PatientComponent } from './components/patient/patient.component';
 import { AppointmentComponent } from './components/appointment/appointment.component';
 import { ConsultationComponent } from './components/consultation/consultation.component';
+import { BillingComponent } from './components/billing/billing.component';
 
 @NgModule({
   declarations: [
@@ -16,7 +17,8 @@ import { ConsultationComponent } from './components/consultation/consultation.co
     NavbarComponent,
     PatientComponent,
     AppointmentComponent,
-    ConsultationComponent
+    ConsultationComponent,
+    BillingComponent
   ],
   imports: [
     BrowserModule,

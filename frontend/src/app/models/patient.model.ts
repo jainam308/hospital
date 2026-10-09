@@ -6,5 +6,8 @@ export interface Patient {
   gender: Gender;
   age: number;
   phoneNumber: string;
+  bloodGroup?: string;
+  allergies?: string;
+  chronicConditions?: string;
   createdAt?: string;
 }

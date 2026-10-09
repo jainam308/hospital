@@ -1,0 +1,280 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">OPD Billing & Razorpay Payments</h1>
+      <p class="page-subtitle">Settle consultation fees online via Razorpay or cash, and issue clinical invoices</p>
+    </div>
+    <div class="header-stats">
+      <div class="stat-card stat-rev">
+        <span class="stat-num">₹{{ totalRevenue | number:'1.2-2' }}</span>
+        <span class="stat-lbl">Total Collected</span>
+      </div>
+      <div class="stat-card stat-pending">
+        <span class="stat-num">{{ pendingCount }}</span>
+        <span class="stat-lbl">Pending Payment</span>
+      </div>
+      <div class="stat-card stat-paid">
+        <span class="stat-num">{{ paidCount }}</span>
+        <span class="stat-lbl">Settled Invoices</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="successMessage" class="alert alert-success">
+    <span>✅ {{ successMessage }}</span>
+    <button class="close-btn" (click)="successMessage = ''">&times;</button>
+  </div>
+  <div *ngIf="errorMessage" class="alert alert-danger">
+    <span>⚠️ {{ errorMessage }}</span>
+    <button class="close-btn" (click)="errorMessage = ''">&times;</button>
+  </div>
+
+  <!-- Filter & Search Controls -->
+  <div class="card list-card">
+    <div class="card-header bills-header">
+      <div class="filter-tabs">
+        <button
+          class="tab-btn"
+          [class.active]="filterStatus === 'ALL'"
+          (click)="setFilterStatus('ALL')"
+        >
+          All Invoices ({{ bills.length }})
+        </button>
+        <button
+          class="tab-btn"
+          [class.active]="filterStatus === 'PENDING'"
+          (click)="setFilterStatus('PENDING')"
+        >
+          Pending ({{ pendingCount }})
+        </button>
+        <button
+          class="tab-btn"
+          [class.active]="filterStatus === 'PAID'"
+          (click)="setFilterStatus('PAID')"
+        >
+          Paid ({{ paidCount }})
+        </button>
+      </div>
+
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          (input)="applyFilter()"
+          placeholder="Search invoice #, patient, doctor..."
+        />
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <div *ngIf="isLoading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading billing records...</p>
+      </div>
+
+      <div *ngIf="!isLoading && displayedBills.length === 0" class="empty-state">
+        <div class="empty-icon">🧾</div>
+        <p>No invoices found for the current filter.</p>
+        <span class="empty-sub">Invoices are automatically generated when doctors complete patient consultations.</span>
+      </div>
+
+      <table *ngIf="!isLoading && displayedBills.length > 0" class="data-table">
+        <thead>
+          <tr>
+            <th>Invoice #</th>
+            <th>Patient Details</th>
+            <th>Attending Doctor</th>
+            <th>Fee Breakdown</th>
+            <th>Total Amount</th>
+            <th>Status</th>
+            <th>Payment Mode</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let b of displayedBills" [class.highlighted-row]="b.appointmentId === highlightAppointmentId">
+            <td class="bold invoice-id">{{ b.billNumber }}</td>
+            <td>
+              <div class="patient-info">
+                <strong>{{ b.patientName }}</strong>
+                <span class="phone-sub">📞 {{ b.patientPhone }} (ID: #{{ b.patientId }})</span>
+              </div>
+            </td>
+            <td>
+              <span class="doctor-badge">👨‍⚕️ {{ b.doctorName }}</span>
+            </td>
+            <td class="fee-breakdown">
+              <div>Fee: ₹{{ b.consultationFee }}</div>
+              <small class="tax-txt">+ GST (18%): ₹{{ b.taxAmount }}</small>
+            </td>
+            <td class="total-amt">
+              <strong>₹{{ b.totalAmount | number:'1.2-2' }}</strong>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="b.paymentStatus.toLowerCase()">
+                {{ b.paymentStatus }}
+              </span>
+            </td>
+            <td>
+              <span *ngIf="b.paymentMode" class="badge-mode" [ngClass]="b.paymentMode.toLowerCase()">
+                {{ b.paymentMode === 'RAZORPAY' ? '💳 Razorpay' : '💵 Cash' }}
+              </span>
+              <span *ngIf="!b.paymentMode" class="muted-dash">-</span>
+            </td>
+            <td class="actions-cell">
+              <!-- If Pending: Show Payment Options -->
+              <ng-container *ngIf="b.paymentStatus === 'PENDING'">
+                <button
+                  class="btn-action btn-pay-rzp"
+                  (click)="payWithRazorpay(b)"
+                  [disabled]="isProcessingPayment"
+                  title="Pay securely via Razorpay"
+                >
+                  💳 Razorpay
+                </button>
+                <button
+                  class="btn-action btn-pay-cash"
+                  (click)="payWithCash(b)"
+                  [disabled]="isProcessingPayment"
+                  title="Record cash payment at counter"
+                >
+                  💵 Cash
+                </button>
+              </ng-container>
+
+              <!-- View Receipt -->
+              <button
+                class="btn-action btn-receipt"
+                (click)="viewReceipt(b)"
+                title="View and print official invoice receipt"
+              >
+                🧾 Receipt
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Printable Invoice Receipt Modal -->
+  <div *ngIf="selectedBillForReceipt" class="modal-backdrop" (click)="closeReceipt()">
+    <div class="receipt-modal" (click)="$event.stopPropagation()">
+      <div class="receipt-card printable-area">
+        <!-- Hospital Header -->
+        <div class="receipt-header">
+          <div class="hospital-branding">
+            <span class="hospital-icon">🏥</span>
+            <div>
+              <h2>OPD CARE HOSPITAL</h2>
+              <p>Multi-Speciality Healthcare & Clinical Research Centre</p>
+              <small>GSTIN: 27AABCT2345M1Z1 | Reg No: MH/2026/0987</small>
+            </div>
+          </div>
+          <div class="receipt-invoice-badge">
+            <span class="inv-title">TAX INVOICE</span>
+            <span class="inv-num">{{ selectedBillForReceipt.billNumber }}</span>
+            <span class="inv-date">{{ selectedBillForReceipt.billedAt | date:'medium' }}</span>
+          </div>
+        </div>
+
+        <hr class="receipt-divider">
+
+        <!-- Patient & Doctor Info Grid -->
+        <div class="receipt-info-grid">
+          <div class="info-block">
+            <span class="block-title">BILL TO (PATIENT)</span>
+            <div class="info-line"><strong>Name:</strong> {{ selectedBillForReceipt.patientName }}</div>
+            <div class="info-line"><strong>Patient ID:</strong> #{{ selectedBillForReceipt.patientId }}</div>
+            <div class="info-line"><strong>Phone:</strong> {{ selectedBillForReceipt.patientPhone }}</div>
+          </div>
+          <div class="info-block">
+            <span class="block-title">CONSULTATION DETAILS</span>
+            <div class="info-line"><strong>Attending Doctor:</strong> {{ selectedBillForReceipt.doctorName }}</div>
+            <div class="info-line"><strong>Appointment Ref:</strong> #{{ selectedBillForReceipt.appointmentId }}</div>
+            <div class="info-line">
+              <strong>Status:</strong>
+              <span class="receipt-status-badge" [ngClass]="selectedBillForReceipt.paymentStatus.toLowerCase()">
+                {{ selectedBillForReceipt.paymentStatus }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Line Items Table -->
+        <table class="receipt-items-table">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th class="text-right">Rate</th>
+              <th class="text-right">Tax (GST 18%)</th>
+              <th class="text-right">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <strong>OPD Clinical Consultation Fee</strong>
+                <small class="d-block text-muted">Specialist doctor review, vitals examination & digital prescription</small>
+              </td>
+              <td class="text-right">₹{{ selectedBillForReceipt.consultationFee | number:'1.2-2' }}</td>
+              <td class="text-right">₹{{ selectedBillForReceipt.taxAmount | number:'1.2-2' }}</td>
+              <td class="text-right bold">₹{{ selectedBillForReceipt.totalAmount | number:'1.2-2' }}</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr class="grand-total-row">
+              <td colspan="3" class="text-right"><strong>Grand Total Payable:</strong></td>
+              <td class="text-right grand-total">₹{{ selectedBillForReceipt.totalAmount | number:'1.2-2' }}</td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <!-- Payment Settlement Verification Stamp -->
+        <div *ngIf="selectedBillForReceipt.paymentStatus === 'PAID'" class="paid-stamp-box">
+          <div class="stamp-circle">✓ PAID</div>
+          <div class="stamp-meta">
+            <div><strong>Payment Mode:</strong> {{ selectedBillForReceipt.paymentMode }}</div>
+            <div *ngIf="selectedBillForReceipt.razorpayPaymentId">
+              <strong>Razorpay Payment Ref:</strong> {{ selectedBillForReceipt.razorpayPaymentId }}
+            </div>
+            <div *ngIf="selectedBillForReceipt.paidAt">
+              <strong>Paid At:</strong> {{ selectedBillForReceipt.paidAt | date:'medium' }}
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="selectedBillForReceipt.paymentStatus === 'PENDING'" class="pending-stamp-box">
+          <span>⚠️ Payment Outstanding. Please settle at cash counter or pay online via Razorpay.</span>
+        </div>
+
+        <!-- Receipt Footer -->
+        <div class="receipt-footer">
+          <div class="receipt-terms">
+            <small>• This is a computer-generated tax invoice. No signature required.</small><br>
+            <small>• Wishing you a speedy recovery!</small>
+          </div>
+          <div class="receipt-auth">
+            <div class="signature-line"></div>
+            <span>Authorized Signatory</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Action Buttons (Hidden on Print) -->
+      <div class="receipt-modal-actions no-print">
+        <button class="btn btn-secondary" (click)="closeReceipt()">Close</button>
+        <button class="btn btn-primary" (click)="printReceipt()">🖨️ Print Receipt</button>
+        <button
+          *ngIf="selectedBillForReceipt.paymentStatus === 'PENDING'"
+          class="btn btn-rzp"
+          (click)="payWithRazorpay(selectedBillForReceipt)"
+        >
+          💳 Pay with Razorpay
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -3,8 +3,10 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AppointmentService } from '../../services/appointment.service';
 import { PatientService } from '../../services/patient.service';
+import { DoctorService } from '../../services/doctor.service';
 import { AppointmentResponse, AppointmentRequest } from '../../models/appointment.model';
 import { Patient } from '../../models/patient.model';
+import { Doctor, Department } from '../../models/doctor.model';
 
 @Component({
   selector: 'app-appointment',
@@ -16,11 +18,15 @@ export class AppointmentComponent implements OnInit {
   todayAppointments: AppointmentResponse[] = [];
   displayedAppointments: AppointmentResponse[] = [];
   patientList: Patient[] = [];
+  doctorsList: Doctor[] = [];
+  departmentsList: Department[] = [];
 
   bookingForm!: FormGroup;
   viewMode: 'today' | 'all' = 'today';
   isLoading: boolean = false;
   isSubmitting: boolean = false;
+  hasSlotConflict: boolean = false;
+  conflictWarningMessage: string = '';
   successMessage: string = '';
   errorMessage: string = '';
 
@@ -28,6 +34,7 @@ export class AppointmentComponent implements OnInit {
     private fb: FormBuilder,
     private appointmentService: AppointmentService,
     private patientService: PatientService,
+    private doctorService: DoctorService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
@@ -35,9 +42,9 @@ export class AppointmentComponent implements OnInit {
   ngOnInit(): void {
     this.initForm();
     this.loadPatients();
+    this.loadDoctors();
     this.loadAppointments();
 
-    // Check if routed with pre-selected patient
     this.route.queryParams.subscribe(params => {
       if (params['patientId']) {
         this.bookingForm.patchValue({
@@ -45,11 +52,15 @@ export class AppointmentComponent implements OnInit {
         });
       }
     });
+
+    // Watch for doctor and time changes to check for slot conflicts in real-time
+    this.bookingForm.valueChanges.subscribe(() => {
+      this.checkConflict();
+    });
   }
 
   initForm(): void {
     const now = new Date();
-    // Round up to nearest next hour
     now.setHours(now.getHours() + 1, 0, 0, 0);
     const localIso = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 
@@ -58,12 +69,52 @@ export class AppointmentComponent implements OnInit {
       doctorName: ['', [Validators.required]],
       appointmentDateTime: [localIso, [Validators.required]]
     });
+    this.hasSlotConflict = false;
+    this.conflictWarningMessage = '';
   }
 
   loadPatients(): void {
     this.patientService.getPatients().subscribe({
       next: (data) => {
         this.patientList = data;
+      }
+    });
+  }
+
+  loadDoctors(): void {
+    this.doctorService.getDoctors().subscribe({
+      next: (docs) => {
+        this.doctorsList = docs;
+      }
+    });
+    this.doctorService.getDepartments().subscribe({
+      next: (depts) => {
+        this.departmentsList = depts;
+      }
+    });
+  }
+
+  checkConflict(): void {
+    const doctor = this.bookingForm.get('doctorName')?.value;
+    const time = this.bookingForm.get('appointmentDateTime')?.value;
+
+    if (!doctor || !time) {
+      this.hasSlotConflict = false;
+      this.conflictWarningMessage = '';
+      return;
+    }
+
+    this.doctorService.checkSlotConflict(doctor, time).subscribe({
+      next: (res) => {
+        this.hasSlotConflict = res.conflict;
+        if (res.conflict) {
+          this.conflictWarningMessage = `⚠️ Doctor "${doctor}" already has a scheduled appointment within 30 minutes of this time.`;
+        } else {
+          this.conflictWarningMessage = '';
+        }
+      },
+      error: () => {
+        this.hasSlotConflict = false;
       }
     });
   }
@@ -112,6 +163,11 @@ export class AppointmentComponent implements OnInit {
   onSubmit(): void {
     if (this.bookingForm.invalid) {
       this.bookingForm.markAllAsTouched();
+      return;
+    }
+
+    if (this.hasSlotConflict) {
+      this.errorMessage = 'Cannot schedule appointment due to a slot conflict with the chosen doctor.';
       return;
     }
 

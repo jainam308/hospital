@@ -18,6 +18,8 @@ export class PatientComponent implements OnInit {
   successMessage: string = '';
   errorMessage: string = '';
 
+  bloodGroups: string[] = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+
   constructor(
     private fb: FormBuilder,
     private patientService: PatientService,
@@ -34,7 +36,10 @@ export class PatientComponent implements OnInit {
       name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
       gender: ['MALE', [Validators.required]],
       age: [null, [Validators.required, Validators.min(0), Validators.max(150)]],
-      phoneNumber: ['', [Validators.required, Validators.pattern(/^[0-9+\-\s()]{7,20}$/)]]
+      phoneNumber: ['', [Validators.required, Validators.pattern(/^[0-9+\-\s()]{7,20}$/)]],
+      bloodGroup: [''],
+      allergies: [''],
+      chronicConditions: ['']
     });
   }
 
@@ -45,7 +50,7 @@ export class PatientComponent implements OnInit {
         this.patients = data;
         this.isLoading = false;
       },
-      error: (err) => {
+      error: () => {
         this.errorMessage = 'Failed to load patients from server.';
         this.isLoading = false;
       }
@@ -91,7 +96,10 @@ export class PatientComponent implements OnInit {
       name: '',
       gender: 'MALE',
       age: null,
-      phoneNumber: ''
+      phoneNumber: '',
+      bloodGroup: '',
+      allergies: '',
+      chronicConditions: ''
     });
   }
 

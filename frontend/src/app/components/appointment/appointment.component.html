@@ -1,8 +1,8 @@
 <div class="page-container">
   <div class="page-header">
     <div>
-      <h1 class="page-title">Appointment Scheduling</h1>
-      <p class="page-subtitle">Schedule OPD consultations and manage daily queue</p>
+      <h1 class="page-title">Appointment Scheduling & Doctor Roster</h1>
+      <p class="page-subtitle">Schedule OPD consultations with real-time slot conflict detection</p>
     </div>
     <div class="header-stats">
       <div class="stat-card">
@@ -38,7 +38,7 @@
           >
             <option [ngValue]="null" disabled>-- Choose a Registered Patient --</option>
             <option *ngFor="let p of patientList" [value]="p.id">
-              #{{ p.id }} - {{ p.name }} (📞 {{ p.phoneNumber }})
+              #{{ p.id }} - {{ p.name }} (📞 {{ p.phoneNumber }}) {{ p.bloodGroup ? '[' + p.bloodGroup + ']' : '' }}
             </option>
           </select>
           <div *ngIf="isFieldInvalid('patientId')" class="field-error">
@@ -57,11 +57,9 @@
             [class.invalid]="isFieldInvalid('doctorName')"
           >
             <option value="" disabled>-- Select Doctor / Department --</option>
-            <option value="Dr. Rajesh Gupta (General Medicine)">Dr. Rajesh Gupta (General Medicine)</option>
-            <option value="Dr. Anjali Menon (Cardiology)">Dr. Anjali Menon (Cardiology)</option>
-            <option value="Dr. Vikram Seth (Orthopedics)">Dr. Vikram Seth (Orthopedics)</option>
-            <option value="Dr. Meera Nambiar (Pediatrics)">Dr. Meera Nambiar (Pediatrics)</option>
-            <option value="Dr. Sneha Roy (Dermatology)">Dr. Sneha Roy (Dermatology)</option>
+            <option *ngFor="let doc of doctorsList" [value]="doc.name + ' (' + doc.departmentName + ')'">
+              {{ doc.name }} - {{ doc.departmentName }} (₹{{ doc.consultationFee }} | {{ doc.roomNumber || 'OPD' }})
+            </option>
           </select>
           <div *ngIf="isFieldInvalid('doctorName')" class="field-error">
             Please select attending doctor
@@ -81,8 +79,18 @@
           </div>
         </div>
 
+        <!-- Real-time Slot Conflict Warning Box -->
+        <div *ngIf="hasSlotConflict" class="conflict-alert">
+          <div class="conflict-icon">⚠️</div>
+          <div class="conflict-text">
+            <strong>Slot Conflict Detected!</strong>
+            <p>{{ conflictWarningMessage }}</p>
+            <span class="conflict-hint">Select a time at least 30 minutes apart or choose an alternate doctor.</span>
+          </div>
+        </div>
+
         <div class="form-actions">
-          <button type="submit" class="btn btn-primary" [disabled]="bookingForm.invalid || isSubmitting">
+          <button type="submit" class="btn btn-primary" [disabled]="bookingForm.invalid || isSubmitting || hasSlotConflict">
             <span *ngIf="isSubmitting">Scheduling...</span>
             <span *ngIf="!isSubmitting">📅 Confirm Appointment</span>
           </button>
