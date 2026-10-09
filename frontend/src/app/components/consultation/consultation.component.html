@@ -1,0 +1,211 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Doctor Consultation & Clinical Summary</h1>
+      <p class="page-subtitle">Record patient vitals, clinical notes, and review historical consultations</p>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <div *ngIf="successMessage" class="alert alert-success">
+    <span>✅ {{ successMessage }}</span>
+    <button class="close-btn" (click)="successMessage = ''">&times;</button>
+  </div>
+  <div *ngIf="errorMessage" class="alert alert-danger">
+    <span>⚠️ {{ errorMessage }}</span>
+    <button class="close-btn" (click)="errorMessage = ''">&times;</button>
+  </div>
+
+  <div class="grid-layout">
+    <!-- Consultation Entry Form Card -->
+    <div class="card form-card">
+      <div class="card-header">
+        <h2 class="card-title">🩺 Record Consultation</h2>
+      </div>
+      <form [formGroup]="consultationForm" (ngSubmit)="onSubmit()" class="form-body">
+        <div class="form-group">
+          <label for="appointmentId">Select Scheduled Appointment <span class="required">*</span></label>
+          <select
+            id="appointmentId"
+            formControlName="appointmentId"
+            (change)="onAppointmentSelect()"
+            [class.invalid]="isFieldInvalid('appointmentId')"
+          >
+            <option [ngValue]="null" disabled>-- Choose a Pending Appointment --</option>
+            <option *ngFor="let a of scheduledAppointments" [value]="a.id">
+              #{{ a.id }} - {{ a.patientName }} ({{ a.doctorName }}) - {{ a.appointmentDateTime | date:'shortTime' }}
+            </option>
+          </select>
+          <div *ngIf="isFieldInvalid('appointmentId')" class="field-error">
+            Please select an appointment
+          </div>
+          <div class="field-hint" *ngIf="scheduledAppointments.length === 0">
+            No scheduled appointments pending. <a routerLink="/appointments">Book an appointment first</a>.
+          </div>
+        </div>
+
+        <!-- Selected Appointment Details Box -->
+        <div *ngIf="selectedAppointment" class="selected-appt-card">
+          <div class="appt-row">
+            <span class="appt-label">Patient:</span>
+            <strong>{{ selectedAppointment.patientName }} (ID: #{{ selectedAppointment.patientId }})</strong>
+          </div>
+          <div class="appt-row">
+            <span class="appt-label">Doctor:</span>
+            <span>{{ selectedAppointment.doctorName }}</span>
+          </div>
+          <div class="appt-row">
+            <span class="appt-label">Slot:</span>
+            <span>{{ selectedAppointment.appointmentDateTime | date:'medium' }}</span>
+          </div>
+        </div>
+
+        <div class="section-title">📊 Patient Vitals</div>
+
+        <div class="form-group">
+          <label for="bloodPressure">Blood Pressure (Systolic/Diastolic) <span class="required">*</span></label>
+          <input
+            id="bloodPressure"
+            type="text"
+            formControlName="bloodPressure"
+            placeholder="e.g. 120/80 mmHg"
+            [class.invalid]="isFieldInvalid('bloodPressure')"
+          />
+          <div *ngIf="isFieldInvalid('bloodPressure')" class="field-error">
+            Blood pressure is required (e.g. 120/80)
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group half">
+            <label for="heartRate">Heart Rate / Pulse</label>
+            <div class="input-with-addon">
+              <input
+                id="heartRate"
+                type="number"
+                min="30"
+                max="250"
+                formControlName="heartRate"
+                placeholder="e.g. 72"
+              />
+              <span class="input-addon">bpm</span>
+            </div>
+          </div>
+
+          <div class="form-group half">
+            <label for="temperature">Body Temperature</label>
+            <div class="input-with-addon">
+              <input
+                id="temperature"
+                type="number"
+                step="0.1"
+                min="90"
+                max="110"
+                formControlName="temperature"
+                placeholder="e.g. 98.6"
+              />
+              <span class="input-addon">°F</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title">📝 Clinical Diagnosis & Notes</div>
+
+        <div class="form-group">
+          <label for="notes">Doctor's Consultation Notes <span class="required">*</span></label>
+          <textarea
+            id="notes"
+            rows="4"
+            formControlName="notes"
+            placeholder="Enter clinical observations, diagnosis, treatment, and prescribed medications..."
+            [class.invalid]="isFieldInvalid('notes')"
+          ></textarea>
+          <div *ngIf="isFieldInvalid('notes')" class="field-error">
+            Clinical consultation notes are required
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" [disabled]="consultationForm.invalid || isSubmitting">
+            <span *ngIf="isSubmitting">Saving & Completing...</span>
+            <span *ngIf="!isSubmitting">✅ Mark Complete & Save Summary</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Patient Consultation History Card -->
+    <div class="card history-card">
+      <div class="card-header history-header">
+        <h2 class="card-title">📜 Completed Consultations History</h2>
+        <div class="patient-filter">
+          <label class="filter-label">Filter Patient:</label>
+          <select [(ngModel)]="filterPatientId" (change)="onPatientFilterChange()">
+            <option [ngValue]="null">-- Select a Patient to View History --</option>
+            <option *ngFor="let p of patientList" [value]="p.id">
+              #{{ p.id }} - {{ p.name }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="history-body">
+        <div *ngIf="isLoadingHistory" class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading consultation records...</p>
+        </div>
+
+        <div *ngIf="!isLoadingHistory && !filterPatientId" class="empty-state">
+          <div class="empty-icon">👆</div>
+          <p>Please select a patient from the dropdown above to view their consultation history.</p>
+        </div>
+
+        <div *ngIf="!isLoadingHistory && filterPatientId && consultations.length === 0" class="empty-state">
+          <div class="empty-icon">📂</div>
+          <p>No completed consultations found for this patient.</p>
+          <span class="empty-sub">Once an appointment is completed with vitals and notes, summaries appear here.</span>
+        </div>
+
+        <!-- Consultation Cards -->
+        <div *ngIf="!isLoadingHistory && consultations.length > 0" class="consultation-list">
+          <div *ngFor="let c of consultations" class="consultation-card">
+            <div class="c-card-header">
+              <div class="c-doctor">
+                <span class="c-doctor-icon">👨‍⚕️</span>
+                <div>
+                  <strong>{{ c.doctorName }}</strong>
+                  <span class="c-date">Consulted on {{ c.consultationDate | date:'medium' }}</span>
+                </div>
+              </div>
+              <span class="c-badge-done">Completed</span>
+            </div>
+
+            <div class="c-vitals-row">
+              <div class="vital-pill bp">
+                <span class="vital-label">BP:</span>
+                <span class="vital-val">{{ c.bloodPressure }}</span>
+              </div>
+              <div *ngIf="c.heartRate" class="vital-pill hr">
+                <span class="vital-label">Heart Rate:</span>
+                <span class="vital-val">{{ c.heartRate }} bpm</span>
+              </div>
+              <div *ngIf="c.temperature" class="vital-pill temp">
+                <span class="vital-label">Temp:</span>
+                <span class="vital-val">{{ c.temperature }} °F</span>
+              </div>
+            </div>
+
+            <div class="c-notes-box">
+              <span class="notes-label">Clinical Notes & Observations:</span>
+              <p class="notes-text">{{ c.notes }}</p>
+            </div>
+
+            <div class="c-card-footer">
+              <small class="footer-ref">Appointment Ref: #{{ c.appointmentId }} | Consultation ID: #{{ c.id }}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
